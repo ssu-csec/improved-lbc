@@ -145,22 +145,27 @@ def insert(insert_str, index, input_list, key, global_meta):
 			b_link = tmp_matrix[0][0]
 		else:
 			tmp_matrix = aes.AES_128_Decryption(input_list[block_index], key)
-			tmp_str = aes.matrix2block(tmp_matrix)
+			tmp_hex = aes.matrix2block(tmp_matrix)
 #			in networking, remove block sign
 			del input_list[block_index]
 			del global_str[block_index]
 #			to this line
-			f_link = tmp_str.pop(0)
-			b_link = tmp_str.pop()
-			insert_str = tmp_str[:in_index] + insert_str + tmp_str[in_index:global_str[block_index]]
-			del global_str[block_index]
+			f_link = tmp_hex.pop(0)
+			b_link = tmp_hex.pop()
+			tmp_str = aes.hex2str(tmp_hex)
+			insert_list = list(insert_str)
+			insert_str = tmp_str[:in_index] + insert_list + tmp_str[in_index:global_str[block_index]]
 
 	insert_list = encrypt(insert_str, key, f_link, b_link)
 	new_global_str = gen_global(len(insert_str))
 	global_str = global_str[:block_index] + new_global_str + global_str[block_index:]
 	new_global_meta = global_enc(global_str, key)
+	block_num = len(global_meta)         
+	for i in range(block_num):
+		del global_meta[0]
 #	in networking, insert block sign
 	output_list = input_list[:block_index] + insert_list + input_list[block_index:]
+	global_meta.extend(new_global_meta)
 #	send global metadata to the server
 #	to this line
 	
@@ -168,5 +173,62 @@ def insert(insert_str, index, input_list, key, global_meta):
 
 def delete(del_len, index, input_list, key, global_meta):
 	global_str = global_dec(global_meta, key)
+	index -= 1
+	block_index = search_block_index(global_str, index)
+	in_index = index
+	for i in range(block_index):
+		in_index -= global_str[i]
+	if del_len == 1:			# delete one letter per one time
+		if global_str[block_index] == 1:	# remove one block
+			if block_index == 0:
+				tmp_block = aes.AES_128_Decryption(input_list[len(input_list) - 1], key)
+				f_link = tmp_block[3][3]
+				tmp_block = aes.AES_128_Decryption(input_list[block_index + 1], key)
+				tmp_block[0][0] = f_link
+				tmp_block = aes.AES_128_Encryption(tmp_block, key)
+#				in networking, remove block sign
+				del input_list[block_index]
+				del input_list[block_index]
+#				to this line
+#				in networking, insert block sign
+				input_list.insert(block_index, tmp_block)
+#				to this line
+			else:
+				new_link = random.randint(0, 255)
+				front_block = aes.AES_128_Decryption(input_list[block_index - 1], key)
+				front_block[3][3] = new_link
+				front_block = aes.AES_128_Encryption(front_block, key)
+				back_block = aes.AES_128_Decryption(input_list[block_index + 1], key)
+				back_block[0][0] = new_link
+				back_block = aes.AES_128_Encryption(back_block, key)
+#				in networking, remove block sign
+				del input_list[block_index - 1]
+				del input_list[block_index - 1]
+				del input_list[block_index - 1]
+#				to this line
+#				in networking, insert block sign
+				input_list.insert(block_index - 1, front_block)
+				input_list.insert(block_index, back_block)
+#				to this line
+			del global_str[block_index]
+		else:							# remove one letter in the block
+			tmp_block = aes.AES_128_Decryption(input_list[block_index], key)
+			tmp_str = aes.matrix2block(tmp_block)
+			del tmp_str[in_index + 1]
+			tmp_str.insert(14, 0)
+			tmp_block = aes.block2matrix(tmp_str)
+			tmp_block = aes.AES_128_Encryption(tmp_block, key)
+#			in networking, remove block sign
+			del input_list[block_index]
+#			to this line
+#			in networking, insert block sign
+			input_list.insert(block_index, tmp_block)
+#			to this line
+			global_str[block_index] -= 1
+		block_num = len(global_meta)
+		for i in range(block_num):
+			del global_meta[0]
+		new_global_meta = global_enc(global_str, key)
+		global_meta.extend(new_global_meta)
 
-	return output_list
+	return input_list

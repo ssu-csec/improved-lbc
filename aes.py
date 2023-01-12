@@ -150,6 +150,7 @@ def block2matrix(block):
 			row_list.append(new_col)
 		matrix.append(row_list)
 	return matrix
+
 def matrix2block(matrix):
 	block = []
 	for row in matrix:
@@ -403,62 +404,16 @@ def AES_128_Decryption(plaintext, key):
 	return output_matrix_3
 
 
-def str2hex(string) :
+def str2hex(string):
 	hex_str = []
 	for cha in string:
 		hex_str.append(ord(cha))
 	
 	return hex_str
-   
-key = [ 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-		0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c ]
 
-data = "nlce w0rk AEStxt"
-
-block = str2hex(data)
-# block = [ 0x6e, 0x31, 0x63, 0x65, 0x20, 0x77, 0x30, 0x72, 
-#		  0x6b, 0x20, 0x41, 0x45, 0x53, 0x74, 0x78, 0x74] 
- 
-		 
-input_matrix = block2matrix(block)
-key_matrix = block2matrix(key)
- 
-if __name__ == "__main__" : 
-	print('='*89)
-	print('')
-	print('	 plaintext : ', data)
-	print('plaintext(hex) : ', end='')
-	dec2hex(input_matrix)
- 
-	print('		   key : ', end='')
-	dec2hex(key_matrix)
- 
-	print('')
-	rkey = key_schedule_Enc(key_matrix)
-	new_matrix = AES_128_Encryption(input_matrix, rkey)
- 
- 
-	print('='*89)
-	print('')
-	print('  ciphertext : ', end='')
-	dec2hex(new_matrix)
-	print('')
-
-	out = AES_128_Decryption(new_matrix, rkey)
-
-	print('='*89)
-	print('')
-	print('	plaintext : ', end = '')
-	dec2hex(out)
-	print('')
-
-	print('')
-	tmatrix1 = SubBytes(input_matrix)
-	tmatrix2 = MixColumns(tmatrix1)
-	dec2hex(tmatrix2)
-	print('')
-	rmatrix1 = Inv_MixColumns(tmatrix2)
-	rmatrix2 = Inv_SubBytes(rmatrix1)
-	dec2hex(rmatrix2)
-
+def hex2str(hex_list):
+	str_list = []
+	for num in hex_list:
+		str_list.append(chr(num))
+	return str_list
 
