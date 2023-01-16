@@ -157,6 +157,32 @@ def matrix2block(matrix):
 		block.extend(row)
 	return block
 
+def str2hex(string):
+	hex_str = []
+	for cha in string:
+		hex_str.append(ord(cha))
+	return hex_str
+
+def hex2str(hex_list):
+	str_list = []
+	for num in hex_list:
+		str_list.append(chr(num))
+	return str_list
+
+def ord2chr(ord_matrix):
+	output_matrix = []
+	for row in ord_matrix:
+		out_row = hex2str(row) 
+		output_matrix.append(out_row)
+	return output_matrix
+
+def chr2ord(chr_matrix):
+	output_matrix = []
+	for row in chr_matrix:
+		out_row = str2hex(row)
+		output_matrix.append(out_row)
+	return output_matrix
+
 # transpose matrix for steps based on row or column 
 
 def TransMatrix(input_matrix):
@@ -338,17 +364,6 @@ def Inv_MixColumns(matrix):
 	output_matrix = TransMatrix(out_matrix)
 	return output_matrix
 
-
-def dec2hex(matrix):
-	print('[', end='')
-	for cnt_i in range(4):
-		print('[%02x, %02x, %02x, %02x]' 
-		%(matrix[cnt_i][0], matrix[cnt_i][1], matrix[cnt_i][2], matrix[cnt_i][3]), end='')
-		if (cnt_i < 3):
-			print(', ', end='')
-	print(']')
-
-
 def AES_Enc_One_Round(matrix, rkey):
 	# SubBytes -> ShiftRows -> MiColumns -> AddRoundKey
 
@@ -373,8 +388,9 @@ def AES_128_Encryption(plaintext, key):
 	output_matrix_1 = SubBytes(new_matrix)
 	output_matrix_2 = ShiftRows(output_matrix_1)
 	output_matrix_3 = AddRoundKey(output_matrix_2, key[10])
+	output_matrix_4 = ord2chr(output_matrix_3)
 
-	return output_matrix_3
+	return output_matrix_4
 
 def AES_Dec_One_Round(matrix, rkey):
    # InvShiftRows -> InvSubBytes -> AddRoundKey -> InvMixColumn
@@ -386,8 +402,8 @@ def AES_Dec_One_Round(matrix, rkey):
 	output_matrix_4 = Inv_MixColumns(output_matrix_3)
 	return output_matrix_4
 	
-def AES_128_Decryption(plaintext, key):
-	matrix = copy.deepcopy(plaintext)
+def AES_128_Decryption(input_matrix, key):
+	matrix = chr2ord(input_matrix)
 	new_matrix = AddRoundKey(matrix, key[10])
 	
 	for cnt_i in range(1,10): # 1 to 9 round
@@ -402,18 +418,4 @@ def AES_128_Decryption(plaintext, key):
 	output_matrix_3 = AddRoundKey(output_matrix_2, key[0])
 
 	return output_matrix_3
-
-
-def str2hex(string):
-	hex_str = []
-	for cha in string:
-		hex_str.append(ord(cha))
-	
-	return hex_str
-
-def hex2str(hex_list):
-	str_list = []
-	for num in hex_list:
-		str_list.append(chr(num))
-	return str_list
 
