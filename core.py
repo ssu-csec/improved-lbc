@@ -17,6 +17,11 @@ class Modi_list:
 		self.del_list = []
 		self.ins_inst = []
 
+def gen_key(raw_key):
+	ascii_key = aes.str2hex(raw_key)
+	key_matrix = aes.block2matrix(ascii_key)
+	key = aes.key_schedule_Enc(key_matrix)
+	return key
 
 def enc_one(input_str, enc_key, f_link, b_link):		# input_str: int list / enc_key : round key list / f_iv : int type / b_link : int type
 	input_block = [f_link]
