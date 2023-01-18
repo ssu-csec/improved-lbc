@@ -14,21 +14,21 @@ data = core.Data()
 tmp_index = 0
 tmp_length = 0
 
-connectionSock = serverSock.accept()
+connectionSock, addr = serverSock.accept()
 
-print('connecting success from port number', str(connectionSock))
+print('connecting success from port number', port)
 
 send_data = pickle.dumps(data)
-connectionSock.send(send_data)
+connectionSock.sendall(send_data)
 
 while True:
 	
 	recv_data = connectionSock.recv(buf)
 	connectionSock.sendall(recv_data)
 	mod_info = pickle.loads(recv_data)
+	print("recv_data is ", mod_info)
 	tmp_index = mod_info.modi_index
 	tmp_length = mod_info.modi_length
 	packet.unpacking(data, mod_info)
-
 
 	

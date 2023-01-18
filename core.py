@@ -15,7 +15,7 @@ class Modi_list:
 		self.modi_length = length
 		self.glob_list = []
 		self.del_list = []
-		self.ins_inst = []
+		self.ins_list = []
 
 def gen_key(raw_key):
 	ascii_key = aes.str2hex(raw_key)
@@ -166,9 +166,9 @@ def insert(insert_str, index, input_data, key):
 		else:
 			tmp_matrix = aes.AES_128_Decryption(input_data.data[block_index], key)
 			tmp_hex = aes.matrix2block(tmp_matrix)
-			output_list.del_list.append(block_list)				# for networking
+			output_list.del_list.append(block_index)				# for networking
 			del input_data.data[block_index]
-			del global_str[block_inddex]
+			del global_str[block_index]
 			f_link = tmp_hex.pop(0)
 			b_link = tmp_hex.pop()
 			tmp_str = aes.hex2str(tmp_hex)

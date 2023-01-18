@@ -4,6 +4,7 @@ import core
 import packet
 
 def get_modify_info(data, key):
+	modi_info = []
 	select = input("choose Insert(I)/Delete(D): ")
 	if select == 'I':
 		plain_data = input("Please write the data you want to insert: ")
@@ -14,6 +15,7 @@ def get_modify_info(data, key):
 		modi_info = core.delete(1, index, data, key)
 	else:
 		print("Please choose right options")
+	print("modi_info is ", modi_info)
 	return modi_info
 
 port = 8081
@@ -30,12 +32,18 @@ clientSock.connect(('127.0.0.1', port))
 
 print('connecting')
 
+recv_data = clientSock.recv(buf*4)
+load_data = pickle.loads(recv_data)
+data.data = load_data.data
+data.global_data = load_data.global_meta
+
 while True:
-	
-	recv_data = clientSock.recv(buf)
-	load_data = pickle.loads(recv_data)
-	packet.unpacking(data, load_data)
+
 	modi_info = get_modify_info(data, key)
 	send_data = pickle.dumps(modi_info)
 	clientSock.sendall(send_data)
-	
+	recv_data = clientSock.recv(buf)
+	load_data = pickle.loads(recv_data)
+	packet.unpacking(data, load_data)
+
+	print("now data is", core.decrypt(data, key))
