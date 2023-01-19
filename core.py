@@ -8,7 +8,6 @@ class Data:
 	def __init__(self):
 		self.global_meta = []
 		self.data = []
-
 class Modi_list:
 	def __init__(self, index, length):
 		self.modi_index = index
@@ -16,7 +15,8 @@ class Modi_list:
 		self.glob_list = []
 		self.del_list = []
 		self.ins_list = []
-
+	def __str__(self):
+		return str((self.modi_index, self.modi_length, self.glob_list, self.del_list, self.ins_list))
 def gen_key(raw_key):
 	ascii_key = aes.str2hex(raw_key)
 	key_matrix = aes.block2matrix(ascii_key)
@@ -125,12 +125,17 @@ def decrypt(input_data, dec_key):
 	i = 0
 	global_str = global_dec(input_data.global_meta, dec_key)
 	for enc_matrix in input_data.data:
+		if global_str[i] == 0:
+			break
 		dec_str = dec_one(enc_matrix, dec_key, back_link, i)
 		back_link = dec_str.pop()
 		for j in range(global_str[i]):
 			output_str.append(dec_str[j])
 		i += 1
-	return output_str
+
+	# test
+	output = aes.hex2str(output_str)	
+	return output
 
 def search_block_index(global_str, index):
 	check = index
@@ -179,7 +184,7 @@ def insert(insert_str, index, input_data, key):
 	new_global_str = gen_global(len(insert_str))
 	global_str = global_str[:block_index] + new_global_str + global_str[block_index:]
 	input_data.global_meta = global_enc(global_str, key)
-	output_list.glob_list.append(input_data.global_meta)		# for networking
+	output_list.glob_list = input_data.global_meta		# for networking
 	output_list.ins_list.append(block_index)					# for networking
 	output_list.ins_list.extend(insert_list)					# for networking
 	input_data.data = input_data.data[:block_index] + insert_list + input_data.data[block_index:]
