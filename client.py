@@ -1,6 +1,7 @@
 from socket import *
 import pickle
-import random 
+import random
+import threading 
 import core
 import packet
 
@@ -8,6 +9,9 @@ def get_modify_info(data, key):
 	modi_info = []
 	select = input("choose Insert(I)/Delete(D): ")
 	while select != 'I' and select != 'D':
+		if select == 'show':
+			dec_str = core.decrypt(data, key)
+			print(*dec_str, sep = '')
 		print("Please choose right option")
 		select = input("choose Insert(I)/Delete(D): ")
 	if select == 'I' or select == 'i':
@@ -17,9 +21,6 @@ def get_modify_info(data, key):
 	elif select == 'D' or select == 'd':
 		index = int(input("Choose the index: "))
 		modi_info = core.delete(1, index, data, key)
-	else:
-		print("Please choose right options")
-	#print("modi_info is ", modi_info)
 	return modi_info
 
 def gathering(sock, data, key):
@@ -42,13 +43,14 @@ def Recv(sock, data, key):
 	while True:
 		recv_data = sock.recv(buf)
 		load_data = pickle.loads(recv_data)
-		if recv_data == "help":
+		if recv_data == "Gathering":
+			print("Gathering request")
 			gathering(sock, data, key)
 		else:
 			packet.unpacking(data, load_data)
 
 port = 8080
-buf = 4096
+buf = 8192
 raw_key = "python is genius"
 key = core.gen_key(raw_key)
 clientSock = socket(AF_INET, SOCK_STREAM)

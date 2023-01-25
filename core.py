@@ -207,8 +207,8 @@ def delete(del_len, index, input_data, key):
 				tmp_block = aes.AES_128_Decryption(input_data.data[block_index + 1], key)
 				tmp_block[0][0] = f_link
 				tmp_block = aes.AES_128_Encryption(tmp_block, key)
-				output_list.del_list.append(block_list + 1)		# for networking
-				output_list.del_list.append(block_list)			# for networking
+				output_list.del_list.append(block_index + 1)		# for networking
+				output_list.del_list.append(block_index)			# for networking
 				del input_data.data[block_index]
 				del input_data.data[block_index]
 				output_list.ins_list.append(block_index)		# for networking
