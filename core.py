@@ -8,6 +8,7 @@ class Data:
 	def __init__(self):
 		self.global_meta = []
 		self.data = []
+	
 class Modi_list:
 	def __init__(self, index, length):
 		self.modi_index = index

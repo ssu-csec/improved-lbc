@@ -1,9 +1,15 @@
 from socket import *
 import pickle
 import random
+import signal
 import threading 
 import core
 import packet
+
+def handler(signum, frame):
+	global clientSock
+	clientSock.sendall(pickle.dumps("EXIT"))
+	exit()
 
 def get_modify_info(data, key):
 	modi_info = []
@@ -49,6 +55,8 @@ def Recv(sock, data, key):
 		else:
 			packet.unpacking(data, load_data)
 
+signal.signal(signal.SIGINT, handler)
+
 port = 8080
 buf = 8192
 raw_key = "python is genius"
@@ -67,7 +75,6 @@ recv_data = clientSock.recv(buf*4)
 load_data = pickle.loads(recv_data)
 data.data = load_data.data
 data.global_data = load_data.global_meta
-
 
 thread1 = threading.Thread(target = Send, args = (clientSock, data, key, ))
 thread1.start()
