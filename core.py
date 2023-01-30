@@ -16,6 +16,12 @@ class Modi_list:
 		self.glob_list = []
 		self.del_list = []
 		self.ins_list = []
+	def unpacking(self, data):
+		data.global_meta = self.glob_list
+		for del_index in self.del_list:
+			del data.data[del_index]
+		ins_index = self.ins_list.pop(0)
+		data.data = data.data[:ins_index] + self.ins_list + data.data[ins_index:]
 	def __str__(self):
 		return str((self.modi_index, self.modi_length, self.glob_list, self.del_list, self.ins_list))
 def gen_key(raw_key):
@@ -125,6 +131,9 @@ def decrypt(input_data, dec_key):
 	back_link = 0
 	i = 0
 	global_str = global_dec(input_data.global_meta, dec_key)
+	if len(global_str) == 0:
+		print("There is no global_str")
+		return output_str
 	for enc_matrix in input_data.data:
 		if global_str[i] == 0:
 			break
@@ -141,6 +150,9 @@ def decrypt(input_data, dec_key):
 def search_block_index(global_str, index):
 	check = index
 	block_index = 0
+	if len(global_str) == 0:
+		print("There is something wrong!!!!")
+		return 0
 	while check > 0:
 		check -= global_str[block_index]
 		block_index += 1

@@ -4,12 +4,11 @@ import pickle
 import random
 import threading
 import core
-import packet
 
 count = 0
 
 def Conflict_Handling(send_queue, client_group):
-	pass
+	pass	
 
 
 
@@ -20,13 +19,20 @@ def Send(client_group, send_queue):
 		if recv == 'new client':
 			break
 		elif recv == 'Gathering':
+			print("send gathering request")
 			client_group[random.randint(0, len(client_group) - 1)].send(pickle.dumps('Gathering'))
+		elif str(type(recv[1])) == "<class 'list'>":
+			for i in range(len(client_group)):
+				if recv[0] != client_group[i]:
+					client_group[i].send(pickle.dumps(recv[1]))
 		else:
-			for client in client_group:
-				if recv[0] != client:
-					client.send(recv[1])
+			for i in range(len(client_group)):
+				if recv[0] != client_group[i]:
+					client_group[i].send(recv[1])
 				else:
-					pass
+					sender = i
+			client_group[sender].sendall(pickle.dumps("Success"))
+
 	print("break for new client")
 
 def Recv(conn, data, send_queue):
@@ -34,17 +40,20 @@ def Recv(conn, data, send_queue):
 	while True:
 		recv_data = conn.recv(buf)
 		modi_info = pickle.loads(recv_data)
-		if modi_info == 'EXIT'
-			pass:
-
+		if modi_info == 'EXIT':
+			print("client byebye")
+		elif str(type(modi_info)) == "<class 'list'>" and modi_info[0] == 'G':
+			send_queue.put([conn, modi_info])
+			data.global_meta = modi_info[1].global_meta
+			data.data = modi_info[1].data
+			count -= 10
 		else:
 			send_queue.put([conn, recv_data])
 			count += 1
-			packet.unpacking(data, mod_info)
+			modi_info.unpacking(data)
 		
-		if count > 20:
+		if count > 10:
 			send_queue.put('Gathering')
-			count -= 20
 		print("get ", count, "th data")
 
 port = 8080
