@@ -7,14 +7,22 @@ import core
 
 count = 0
 
-def Conflict_Handling(send_queue, client_group):
-	pass	
-
-
+def Conflict_Handling(conflict_list, client_group):
+	print("Conflict Handling!")
+	if conflict_list[0][1].modi_block == conflict_list[1][1].modi_block:
+		conflict_list[1][0].send(pickle.dumps("Request again"))
+		for i in range(len(client_group)):
+			if conflict_list[0][0] != client_group[i]:
+				client_group[i].send(pickle.dumps(conflic_list[0][1]))
 
 
 def Send(client_group, send_queue):
 	while True:
+		if send_queue.qsize() > 1:
+			conflict_list = []
+			while send_queue.empty() == False:
+				conflict_list.append(send_queue.get())
+			Conflict_Handling(conflict_list, client_group)
 		recv = send_queue.get()
 		if recv == 'new client':
 			break
@@ -42,7 +50,7 @@ def Recv(conn, data, send_queue):
 		modi_info = pickle.loads(recv_data)
 		if modi_info == 'EXIT':
 			print("client byebye")
-		elif str(type(modi_info)) == "<class 'list'>" and modi_info[0] == 'G':
+		elif type(modi_info) == type([]) and modi_info[0] == 'G':
 			send_queue.put([conn, modi_info])
 			data.global_meta = modi_info[1].global_meta
 			data.data = modi_info[1].data
@@ -75,13 +83,13 @@ while True:
 	client_group.append(connectionSock)
 	print("Connected to new client ", str(addr))
 	send_data = pickle.dumps(data)
-	connectionSock.sendall(send_data)
+	connectionSock.send(send_data)
 	if len(client_group) > 1:
 		send_queue.put('new client')
 		send_thread = threading.Thread(target = Send, args = (client_group, send_queue, ))
 		send_thread.start()
 	else:
-		send_thread = threading.Thread(target = Send, args = (client_group, send_queue, )    )
+		send_thread = threading.Thread(target = Send, args = (client_group, send_queue, ))
 		send_thread.start()
 
 	recv_thread = threading.Thread(target = Recv, args = (connectionSock, data, send_queue, ))

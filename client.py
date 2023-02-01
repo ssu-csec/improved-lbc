@@ -14,13 +14,17 @@ def handler(signum, frame):
 def get_modify_info(data, key):
 	global modi_queue
 	modi_info = []
-	select = input("choose Insert(I)/Delete(D): ")
+	select = input("Choose Insert(I)/Delete(D): ")
 	while select != 'I' and select != 'D':
 		if select == 'show':
 			dec_str = core.decrypt(data, key)
+			print("Plain text", "=" * 80)
 			print(*dec_str, sep = '')
+			print("")
+			print("Global string", "=" * 77)
+			print(*core.global_dec(data.global_meta, key), sep = "/")
 		print("Please choose right option")
-		select = input("choose Insert(I)/Delete(D): ")
+		select = input("Choose Insert(I)/Delete(D): ")
 	if select == 'I' or select == 'i':
 		plain_data = input("Please write the data you want to insert: ")
 		index = int(input("Choose the index: "))
@@ -64,8 +68,8 @@ def Recv(sock, data, key):
 			print("Success!")
 			modi_queue.get()
 		elif load_data == "Request again":
-			pass
-		elif str(type(load_data)) == "<class 'list'>" and load_data[0] == 'G':
+			request = modi_queue.get()
+		elif type(load_data) == type([]) and load_data[0] == 'G':
 			data.global_meta = load_data[1].global_meta
 			data.data = load_data[1].data
 		else:
@@ -93,8 +97,8 @@ print('connecting')
 recv_data = clientSock.recv(buf*4)
 load_data = pickle.loads(recv_data)
 data.data = load_data.data
-data.global_data = load_data.global_meta
-#print("Existing global data is ", data.global_data, " Existing data is ", data.data)
+data.global_meta = load_data.global_meta
+#print("Existing global data is ", data.global_meta, " Existing data is ", data.data)
 
 thread1 = threading.Thread(target = Send, args = (clientSock, data, key, ))
 thread1.start()
