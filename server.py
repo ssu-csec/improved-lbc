@@ -9,12 +9,25 @@ count = 0
 
 def Conflict_Handling(conflict_list, client_group):
 	print("Conflict Handling!")
-	if conflict_list[0][1].modi_block == conflict_list[1][1].modi_block:
+	global send_queue
+	flag = 0
+	for index in conflict_list[0][1].del_list:
+		for comp in conflict_list[1][1].del_list:
+			if index == comp:
+				flag = 1
+				break
+	if flag == 1:
 		conflict_list[1][0].send(pickle.dumps("Request again"))
 		for i in range(len(client_group)):
 			if conflict_list[0][0] != client_group[i]:
 				client_group[i].send(pickle.dumps(conflic_list[0][1]))
-
+			else:
+				sender = i
+		client_group[sender].sendall(pickle.dumps("Success"))
+	else:
+		for data in conflict_list:
+			send_queue.put(data)
+			wait(0.01)
 
 def Send(client_group, send_queue):
 	while True:
