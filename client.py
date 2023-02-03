@@ -4,6 +4,7 @@ import pickle
 import random
 import signal
 import threading 
+import time
 import core
 
 def handler(signum, frame):
@@ -29,11 +30,11 @@ def get_modify_info(data, key):
 		plain_data = input("Please write the data you want to insert: ")
 		index = int(input("Choose the index: "))
 		modi_info = core.insert(plain_data, index, data, key)
-		modi_queue.put([index, plain_data])
+		modi_queue.put(['I', index, plain_data])
 	elif select == 'D' or select == 'd':
 		index = int(input("Choose the index: "))
 		modi_info = core.delete(1, index, data, key)
-		modi_queue.put([index, -1])
+		modi_queue.put(['D', index, -1])
 	#print(modi_info)
 	return modi_info
 
@@ -50,11 +51,29 @@ def gathering(sock, data, key):
 	data.global_meta = gather_data.global_meta
 	data.data = gather_data.data
 
+def Conflict_Handling(sock, data, key, request):
+	global modi_queue
+	recv_data = sock.recv(buf)
+	load_data = pickle.loads(recv_data)
+	load_data.unpacking(data)
+	if load_data.modi_index <= request[1]:
+		request[1] += load_data.modi_length
+	modi_queue.put(request)
+	if request[0] == 'I':
+		modi_info = core.insert(request[2], request[1], data, key)
+	elif request[0] == 'D':
+		modi_info = core.delete(1, request[1], data, key)
+	sock.sendall(pickle.dumps(modi_info))
+
 def Send(sock, data, key):
+	global modi_queue
 	while True:
+		while modi_queue.empty() == False:
+			pass
+			#print("...")
+			#time.sleep(0.001)
 		modi_info = get_modify_info(data, key)
-		send_data = pickle.dumps(modi_info)
-		sock.sendall(send_data)
+		sock.sendall(pickle.dumps(modi_info))
 
 def Recv(sock, data, key):
 	global modi_queue
@@ -65,10 +84,11 @@ def Recv(sock, data, key):
 			print("Gathering request")
 			gathering(sock, data, key)
 		elif load_data == "Success":
-			print("Success!")
+			#print("Success!")
 			modi_queue.get()
 		elif load_data == "Request again":
 			request = modi_queue.get()
+			Conflict_Handling(sock, data, key, request)
 		elif type(load_data) == type([]) and load_data[0] == 'G':
 			data.global_meta = load_data[1].global_meta
 			data.data = load_data[1].data
