@@ -8,8 +8,8 @@ import core
 count = 0
 
 def Conflict_Handling(conflict_list, client_group):
-	print("Conflict Handling!")
 	global send_queue
+	print("Conflict Handling!")
 	flag = 0
 	for index in conflict_list[0][1].del_list:
 		for comp in conflict_list[1][1].del_list:
@@ -29,17 +29,16 @@ def Conflict_Handling(conflict_list, client_group):
 			send_queue.put(data)
 			#wait(0.01)
 
-def Send(client_group, send_queue):
+def Send(client_group):
+	global send_queue
 	while True:
 		if send_queue.qsize() > 1:
 			conflict_list = []
 			while send_queue.empty() == False:
 				conflict_list.append(send_queue.get())
-			Conflict_Handling(conflict_list, client_group)
+			Conflict_Handling(conflict_list, client_group, send_queue)
 		recv = send_queue.get()
-		if recv == 'new client':
-			break
-		elif recv == 'Gathering':
+		if recv == 'Gathering':
 			print("send gathering request")
 			client_group[random.randint(0, len(client_group) - 1)].send(pickle.dumps('Gathering'))
 		elif str(type(recv[1])) == "<class 'list'>":
@@ -54,17 +53,19 @@ def Send(client_group, send_queue):
 					sender = i
 			client_group[sender].sendall(pickle.dumps("Success"))
 
-	print("break for new client")
-
-def Recv(conn, data, send_queue):
+def Recv(conn, data):
 	global count 
 	global client_group
+	global send_queue
+	buf = 8196*16
 	while True:
 		recv_data = conn.recv(buf)
 		modi_info = pickle.loads(recv_data)
 		if modi_info == 'EXIT':
-			print("client byebye")
 			client_group.remove(conn)
+			if len(client_group) == 0:
+				print("All client disconnected")
+				print("Remaining Data is", *data.data, sep = '')
 			return
 		elif type(modi_info) == type([]) and modi_info[0] == 'G':
 			send_queue.put([conn, modi_info])
@@ -80,6 +81,7 @@ def Recv(conn, data, send_queue):
 			send_queue.put('Gathering')
 		print("get ", count, "th data")
 
+
 port = 8080
 buf = 8192
 
@@ -94,7 +96,7 @@ tmp_length = 0
 
 client_group = []
 
-send_thread = threading.Thread(target = Send, args = (client_group, send_queue, ))
+send_thread = threading.Thread(target = Send, args = (client_group, ))
 send_thread.start()
 while True:
 	connectionSock, addr = serverSock.accept()
@@ -102,7 +104,6 @@ while True:
 	print("Connected to new client ", str(addr))
 	send_data = pickle.dumps(data)
 	connectionSock.send(send_data)
-	recv_thread = threading.Thread(target = Recv, args = (connectionSock, data, send_queue, ))
+	recv_thread = threading.Thread(target = Recv, args = (connectionSock, data, ))
 	recv_thread.start()
 
-	

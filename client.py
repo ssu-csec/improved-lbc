@@ -6,6 +6,7 @@ import signal
 import threading 
 import time
 import core
+import edit
 
 def handler(signum, frame):
 	global clientSock
@@ -35,7 +36,6 @@ def get_modify_info(data, key):
 		index = int(input("Choose the index: "))
 		modi_info = core.delete(1, index, data, key)
 		modi_queue.put(['D', index, -1])
-	#print(modi_info)
 	return modi_info
 
 def gathering(sock, data, key):
@@ -70,13 +70,12 @@ def Send(sock, data, key):
 	while True:
 		while modi_queue.empty() == False:
 			pass
-			#print("...")
-			#time.sleep(0.001)
 		modi_info = get_modify_info(data, key)
 		sock.sendall(pickle.dumps(modi_info))
 
 def Recv(sock, data, key):
 	global modi_queue
+	buf = 8196 * 16
 	while True:
 		recv_data = sock.recv(buf)
 		load_data = pickle.loads(recv_data)
@@ -97,28 +96,22 @@ def Recv(sock, data, key):
 			load_data.unpacking(data)
 
 signal.signal(signal.SIGINT, handler)
-
+modi_queue = Queue()
 port = 8080
 buf = 8192
 raw_key = "python is genius"
 key = core.gen_key(raw_key)
 clientSock = socket(AF_INET, SOCK_STREAM)
-
-modi_queue = Queue()
-
 data = core.Data()
 tmp_index = 0
 tmp_length = 0
-
 clientSock.connect(('127.0.0.1', port))
-
 print('connecting')
 
 recv_data = clientSock.recv(buf*4)
 load_data = pickle.loads(recv_data)
 data.data = load_data.data
 data.global_meta = load_data.global_meta
-#print("Existing global data is ", data.global_meta, " Existing data is ", data.data)
 
 thread1 = threading.Thread(target = Send, args = (clientSock, data, key, ))
 thread1.start()
