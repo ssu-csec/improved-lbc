@@ -216,9 +216,8 @@ def re_tab(s):
 
 
 
-def main():
+def main(name):
     try:
-        name = sys.argv[1]
         assert open(name, "a")
     except:
         sys.stderr.write(__doc__)

@@ -5,10 +5,11 @@ import random
 import threading
 import core
 
-count = 0
+class Count:
+	def __init__(self):
+		self.num = 0
 
-def Conflict_Handling(conflict_list, client_group):
-	global send_queue
+def Conflict_Handling(conflict_list, , send_queue, client_group):
 	print("Conflict Handling!")
 	flag = 0
 	for index in conflict_list[0][1].del_list:
@@ -29,19 +30,18 @@ def Conflict_Handling(conflict_list, client_group):
 			send_queue.put(data)
 			#wait(0.01)
 
-def Send(client_group):
-	global send_queue
+def Send(client_group, send_queue):
 	while True:
 		if send_queue.qsize() > 1:
 			conflict_list = []
 			while send_queue.empty() == False:
 				conflict_list.append(send_queue.get())
-			Conflict_Handling(conflict_list, client_group, send_queue)
+			Conflict_Handling(conflict_list, send_queue, client_group)
 		recv = send_queue.get()
 		if recv == 'Gathering':
 			print("send gathering request")
 			client_group[random.randint(0, len(client_group) - 1)].send(pickle.dumps('Gathering'))
-		elif str(type(recv[1])) == "<class 'list'>":
+		elif type(recv[1]) == type([]):
 			for i in range(len(client_group)):
 				if recv[0] != client_group[i]:
 					client_group[i].send(pickle.dumps(recv[1]))
@@ -53,37 +53,33 @@ def Send(client_group):
 					sender = i
 			client_group[sender].sendall(pickle.dumps("Success"))
 
-def Recv(conn, data):
-	global count 
-	global client_group
-	global send_queue
+def Recv(conn, data, send_queue, count, client_group): 
 	buf = 8196*16
+	conn.sendall(pickle.dumps(data))
 	while True:
 		recv_data = conn.recv(buf)
 		modi_info = pickle.loads(recv_data)
 		if modi_info == 'EXIT':
 			client_group.remove(conn)
 			if len(client_group) == 0:
-				print("All client disconnected")
-				print("Remaining Data is", *data.data, sep = '')
-			return
+				with open('server_data.p', 'wb') as f:
+					pickle.dump(data.f)
+					f.close()
 		elif type(modi_info) == type([]) and modi_info[0] == 'G':
 			send_queue.put([conn, modi_info])
 			data.global_meta = modi_info[1].global_meta
 			data.data = modi_info[1].data
-			count -= 10
+			count.num -= 10
 		else:
 			send_queue.put([conn, recv_data])
-			count += 1
+			count.num += 1
 			modi_info.unpacking(data)
 		
-		if count > 10:
+		if count.num >= 10:
 			send_queue.put('Gathering')
-		print("get ", count, "th data")
-
-
+		print("get ", count.num, "th data")
+	
 port = 8080
-buf = 8192
 
 send_queue = Queue()
 serverSock = socket(AF_INET, SOCK_STREAM)
@@ -91,19 +87,22 @@ serverSock.bind(('', port))
 serverSock.listen(10)
 
 data = core.Data()
-tmp_index = 0
-tmp_length = 0
+with open("server_data.p", 'wb') as f:
+	pickle.dump(data, f)
+	f.close()
+count = Count()
 
 client_group = []
 
-send_thread = threading.Thread(target = Send, args = (client_group, ))
+send_thread = threading.Thread(target = Send, args = (client_group, send_queue, ))
 send_thread.start()
 while True:
 	connectionSock, addr = serverSock.accept()
+	if len(client_group) == 0:
+		with open("server_data.p", 'rb') as f:
+			data.pickle.load(f)
 	client_group.append(connectionSock)
 	print("Connected to new client ", str(addr))
-	send_data = pickle.dumps(data)
-	connectionSock.send(send_data)
-	recv_thread = threading.Thread(target = Recv, args = (connectionSock, data, ))
+	recv_thread = threading.Thread(target = Recv, args = (connectionSock, data, send_queue, count, ))
 	recv_thread.start()
 

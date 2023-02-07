@@ -6,37 +6,11 @@ import signal
 import threading 
 import time
 import core
-import edit
 
 def handler(signum, frame):
 	global clientSock
 	clientSock.sendall(pickle.dumps("EXIT"))
 	exit(0)
-
-def get_modify_info(data, key):
-	global modi_queue
-	modi_info = []
-	select = input("Choose Insert(I)/Delete(D): ")
-	while select != 'I' and select != 'D':
-		if select == 'show':
-			dec_str = core.decrypt(data, key)
-			print("Plain text", "=" * 80)
-			print(*dec_str, sep = '')
-			print("")
-			print("Global string", "=" * 77)
-			print(*core.global_dec(data.global_meta, key), sep = "/")
-		print("Please choose right option")
-		select = input("Choose Insert(I)/Delete(D): ")
-	if select == 'I' or select == 'i':
-		plain_data = input("Please write the data you want to insert: ")
-		index = int(input("Choose the index: "))
-		modi_info = core.insert(plain_data, index, data, key)
-		modi_queue.put(['I', index, plain_data])
-	elif select == 'D' or select == 'd':
-		index = int(input("Choose the index: "))
-		modi_info = core.delete(1, index, data, key)
-		modi_queue.put(['D', index, -1])
-	return modi_info
 
 def gathering(sock, data, key):
 	print("Gathering function start")
@@ -51,9 +25,8 @@ def gathering(sock, data, key):
 	data.global_meta = gather_data.global_meta
 	data.data = gather_data.data
 
-def Conflict_Handling(sock, data, key, request):
-	global modi_queue
-	recv_data = sock.recv(buf)
+def Conflict_Handling(sock, data, key, modi_queue, request):
+	recv_data = sock.recv(8196 * 16)
 	load_data = pickle.loads(recv_data)
 	load_data.unpacking(data)
 	if load_data.modi_index <= request[1]:
@@ -65,16 +38,17 @@ def Conflict_Handling(sock, data, key, request):
 		modi_info = core.delete(1, request[1], data, key)
 	sock.sendall(pickle.dumps(modi_info))
 
-def Send(sock, data, key):
-	global modi_queue
+def Send(sock, data, key, modi_queue, tmp_data):
 	while True:
-		while modi_queue.empty() == False:
-			pass
-		modi_info = get_modify_info(data, key)
-		sock.sendall(pickle.dumps(modi_info))
+		modi_info = modi_queue.get()
+		tmp_data.put(modi_info)
+		if modi_info[0] == 'I':
+			send_data = core.insert(modi_info[2], modi_info[1], data, key)
+		elif modi_info[0] == 'D':
+			send_data = core.delete(modi_info[2], modi_info[1], data, key)
+		sock.sendall(pickle.dumps(send_data))
 
-def Recv(sock, data, key):
-	global modi_queue
+def Recv(sock, data, key, tmp_data):
 	buf = 8196 * 16
 	while True:
 		recv_data = sock.recv(buf)
@@ -84,10 +58,10 @@ def Recv(sock, data, key):
 			gathering(sock, data, key)
 		elif load_data == "Success":
 			#print("Success!")
-			modi_queue.get()
+			tmp_data.get()
 		elif load_data == "Request again":
-			request = modi_queue.get()
-			Conflict_Handling(sock, data, key, request)
+			request = tmp_data.get()
+			Conflict_Handling(sock, data, key, tmp_data, request)
 		elif type(load_data) == type([]) and load_data[0] == 'G':
 			data.global_meta = load_data[1].global_meta
 			data.data = load_data[1].data
@@ -95,27 +69,32 @@ def Recv(sock, data, key):
 			#print("Recv data is ", load_data)
 			load_data.unpacking(data)
 
-signal.signal(signal.SIGINT, handler)
-modi_queue = Queue()
-port = 8080
-buf = 8192
-raw_key = "python is genius"
-key = core.gen_key(raw_key)
-clientSock = socket(AF_INET, SOCK_STREAM)
-data = core.Data()
-tmp_index = 0
-tmp_length = 0
-clientSock.connect(('127.0.0.1', port))
-print('connecting')
+def client_main(port):
+	modi_queue = Queue()
+	tmp_data = Queue()
+	raw_key = "python is genius"
+	key = core.gen_key(raw_key)
+	global clientSock = socket(AF_INET, SOCK_STREAM)
+	signal.signal(signal.SIGINT, handler)
+	data = core.Data()
+	clientSock.connect(('127.0.0.1', port))
+	print('connecting')
 
-recv_data = clientSock.recv(buf*4)
-load_data = pickle.loads(recv_data)
-data.data = load_data.data
-data.global_meta = load_data.global_meta
+	recv_data = clientSock.recv(buf*4)
+	load_data = pickle.loads(recv_data)
+	data.data = load_data.data
+	data.global_meta = load_data.global_meta
+	f = open("tmp_data.txt", 'w')
+	f.write(''.join(dec))
+	f.close
 
-thread1 = threading.Thread(target = Send, args = (clientSock, data, key, ))
-thread1.start()
+	thread1 = threading.Thread(target = Send, args = (clientSock, data, key, modi_queue, tmp_data, ))
+	thread1.start()
 
-thread2 = threading.Thread(target = Recv, args = (clientSock, data, key, ))
-thread2.start()
+	thread2 = threading.Thread(target = Recv, args = (clientSock, data, key, tmp_data, ))
+	thread2.start()
 
+	edit.main("tmp_data.txt")
+
+if __name__ == "__main__":
+	client_main(8080)
