@@ -75,9 +75,9 @@ class Server:
 				data.data = modi_info[1].data
 				self.count -= 10
 			else:
-				send_queue.put([conn, recv_data])
+				self.send_queue.put([conn, recv_data])
 				self.count += 1
-				modi_info.unpacking(data)
+				modi_info.unpacking(self.data)
 		
 			if self.count >= 10:
 				self.send_queue.put('Gathering')
@@ -137,6 +137,7 @@ class Client:
 				pass
 			modi_info = self.input_queue.get()
 			self.tmp_data = modi_info
+			print("tmp data is ", self.tmp_data)
 			if modi_info[0] == "I":
 				send_data = core.insert(modi_info[2], modi_info[1], self.data, self.key)
 			elif modi_info == "D":
@@ -152,6 +153,7 @@ class Client:
 				print("Gathering request")
 				self.gathering()
 			elif load_data == "Success":
+				print("Get Success!!")
 				self.flag = 0
 				self.tmp_data = []
 			elif load_data == "Request again":
