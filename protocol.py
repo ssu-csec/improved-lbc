@@ -80,11 +80,11 @@ class Server:
 				self.send_queue.put([conn, recv_data])
 				self.count += 1
 				modi_info.unpacking(self.data)
-				print("Now Data is ", self.data.data)
+				#print("Now Data is ", self.data.data)
+				print("get ", self.count, "th data")
 		
 			if self.count >= 10:
 				self.send_queue.put('Gathering')
-			print("get ", self.count, "th data")
 	def main(self):
 		serverSock = socket(AF_INET, SOCK_STREAM)
 		serverSock.bind(('', self.port))
@@ -157,7 +157,7 @@ class Client:
 				print("Gathering request")
 				self.gathering()
 			elif load_data == "Success":
-				print("Get Success!!")
+				#print("Get Success!!")
 				self.flag = 0
 				self.tmp_data = []
 			elif load_data == "Request again":
