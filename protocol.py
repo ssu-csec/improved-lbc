@@ -59,7 +59,7 @@ class Server:
 				self.client_group[sender].sendall(pickle.dumps("Success"))
 	
 	def Recv(self, conn): 
-		conn.sendall(pickle.dumps(data))
+		conn.sendall(pickle.dumps(self.data))
 		while True:
 			recv_data = conn.recv(self.buf)
 			modi_info = pickle.loads(recv_data)
@@ -91,16 +91,16 @@ class Server:
 			pickle.dump(self.data, f)
 			f.close()
 
-		send_thread = threading.Thread(target = self.Send, args = (self, ))
+		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
 		while True:
 			connectionSock, addr = serverSock.accept()
 			if len(self.client_group) == 0:
 				with open("server_data.p", 'rb') as f:
-					self.data.pickle.load(f)
+					self.data = pickle.load(f)
 			self.client_group.append(connectionSock)
 			print("Connected to new client ", str(addr))
-			recv_thread = threading.Thread(target = self.Recv, args = (self, connectionSock, ))
+			recv_thread = threading.Thread(target = self.Recv, args = (connectionSock, ))
 			recv_thread.start()
 
 class Client:
@@ -121,7 +121,7 @@ class Client:
 		self.data.data = core.encrypt(plain, key, iv, iv)
 		self.sock.sendall(pickle.dumps(['G', self.data]))
 	
-	def Conflict_Handling(self, request)
+	def Conflict_Handling(self, request):
 		recv_data = self.sock.recv(self.buf)
 		load_data = pickle.loads(recv_data)
 		load_data.unpacking(self.data)
@@ -133,7 +133,7 @@ class Client:
 	
 	def Send(self):
 		while True:
-			while flag == 1:
+			while self.flag == 1:
 				pass
 			modi_info = self.input_queue.get()
 			self.tmp_data = modi_info
@@ -148,7 +148,7 @@ class Client:
 		while True:
 			recv_data = self.sock.recv(self.buf)
 			load_data = pickle.loads(recv_data)
-			if load_data == "Gathering"
+			if load_data == "Gathering":
 				print("Gathering request")
 				self.gathering()
 			elif load_data == "Success":
@@ -169,9 +169,9 @@ class Client:
 		load_data = pickle.loads(recv_data)
 		self.data = load_data
 
-		send_thread = threading.Thread(target = self.Send, args = (self, ))
+		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
 
-		recv_thread = threading.Thread(target = self.Recv, args = (self, ))
+		recv_thread = threading.Thread(target = self.Recv)
 		recv_thread.start()
 
