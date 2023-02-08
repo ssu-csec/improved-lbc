@@ -64,11 +64,13 @@ class Server:
 			recv_data = conn.recv(self.buf)
 			modi_info = pickle.loads(recv_data)
 			if modi_info == 'EXIT':
-				client_group.remove(conn)
-				if len(client_group) == 0:
+				print("Client byebye")
+				self.client_group.remove(conn)
+				if len(self.client_group) == 0:
 					with open('server_data.p', 'wb') as f:
-						pickle.dump(data.f)
+						pickle.dump(self.data, f)
 						f.close()
+					return
 			elif type(modi_info) == type([]) and modi_info[0] == 'G':
 				send_queue.put([conn, modi_info])
 				data.global_meta = modi_info[1].global_meta
@@ -78,6 +80,7 @@ class Server:
 				self.send_queue.put([conn, recv_data])
 				self.count += 1
 				modi_info.unpacking(self.data)
+				print("Now Data is ", self.data.data)
 		
 			if self.count >= 10:
 				self.send_queue.put('Gathering')
@@ -137,10 +140,11 @@ class Client:
 				pass
 			modi_info = self.input_queue.get()
 			self.tmp_data = modi_info
-			print("tmp data is ", self.tmp_data)
+			#send_data = core.Modi_list(0,0)
+			#print("tmp data is ", self.tmp_data)
 			if modi_info[0] == "I":
 				send_data = core.insert(modi_info[2], modi_info[1], self.data, self.key)
-			elif modi_info == "D":
+			elif modi_info[0] == "D":
 				send_data = core.delete(1, modi_info[1], self.data, self.key)
 			self.sock.sendall(pickle.dumps(send_data))
 			self.flag = 1
