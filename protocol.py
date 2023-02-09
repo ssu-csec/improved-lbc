@@ -2,7 +2,6 @@ from socket import *
 from queue import Queue
 import pickle
 import random
-import signal
 import threading
 import core
 
@@ -41,7 +40,7 @@ class Server:
 				conflict_list = []
 				while self.send_queue.empty() == False:
 					conflict_list.append(self.send_queue.get())
-				Conflict_Handling(self, conflict_list)
+				self.Conflict_Handling(self, conflict_list)
 			recv = self.send_queue.get()
 			if recv == 'Gathering':
 				print("send gathering request")
