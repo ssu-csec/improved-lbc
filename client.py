@@ -4,7 +4,6 @@ import pickle
 import random
 import signal
 import threading 
-import time
 import core
 
 def handler(signum, frame):

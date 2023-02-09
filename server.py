@@ -9,7 +9,7 @@ class Count:
 	def __init__(self):
 		self.num = 0
 
-def Conflict_Handling(conflict_list, , send_queue, client_group):
+def Conflict_Handling(conflict_list, send_queue, client_group):
 	print("Conflict Handling!")
 	flag = 0
 	for index in conflict_list[0][1].del_list:
