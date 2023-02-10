@@ -1,22 +1,16 @@
 from socket import *
 from queue import Queue
+import crypto
 import pickle
 import threading
 
 class Server:
-	def __init__(self, port):
+	def __init__(self.port):
+		self.buf = 1024*32
 		self.port = port
-		self.buf = 1024*8
+		self.data = b''
 		self.client_group = []
 		self.send_queue = Queue()
-		self.data = []
-
-	def Modification(self, recv_data):
-		if recv_data[0] == "I":
-			self.data = self.data[:recv_data[1]] + recv_data[2] + self.data[recv_data[1]:]
-
-		elif recv_data[0] == "D":
-			self.data = self.data[:recv_data[1]] + self.data[recv_data[1] + 1:]
 
 	def Send(self):
 		while True:
@@ -34,27 +28,25 @@ class Server:
 			recv_data = conn.recv(self.buf)
 			load_data = pickle.loads(recv_data)
 			if load_data == "EXIT":
-				print("Client byebye")
+				print("client_byebye")
 				self.client_group.remove(conn)
 				if len(self.client_group) == 0:
-					data_str = ''.join(str(s) for s in self.data)
-					with open("none_data.txt", "w") as f:
-						f.write(data_str)
+					with open('ex_data.p', 'wb') as f:
+						f.write(self.data)
 						f.close
 					return
 			else:
 				self.send_queue.put([conn, recv_data])
-				self.Modification(load_data)
-	
+				self.data = load_data
+
 	def main(self):
 		serverSock = socket(AF_INET, SOCK_STREAM)
-		serverSock.bind(('', self.port))
+		serverSock.bind('', self.port)
 		serverSock.listen(10)
 		
-		data_str = ''.join(str(s) for s in self.data)
-		with open("none_data.txt", 'w') as f:
-			f.write(data_str)
-			f.close()
+		with open("ex_data.p", 'wb') as f:
+			f.write(self.data)
+			f.close
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
@@ -62,58 +54,61 @@ class Server:
 		while True:
 			connectionSock, addr = serverSock.accept()
 			if len(self.client_group) == 0:
-				with open("none_data.txt", 'r') as f:
+				with open("ex.data.p", 'rb') as f:
 					self.data = f.read()
 			self.client_group.append(connectionSock)
-			print("Connected to new client ", str(addr))
+			print("Connected to new client", str(addr))
+			
 			recv_thread = threading.Thread(target = self.Recv, args = (connectionSock, ))
 			recv_thread.start()
 
 class Client:
-	def __init__(self, sock, input_queue):
+	def __init__(self, sock, input_queue, mode, key, initial_vector)
 		self.sock = sock
-		self.buf = 1024*8
-		self.data = []
+		self.buf = 1024*32
+		self.data = b''
 		self.input_queue = input_queue
 		self.flag = 0
+		self.mode = mode
+		self.key = key
+		self.iv = initial_vector
 
 	def Modification(self, recv_data):
-		if recv_data[0] == 'I':
-			self.data = self.data[:recv_data[1]] + recv_data[2] + self.data[recv_data[1]:]
-		elif recv_data[1] == "D":
-			self.data = self.data[:recv_data[1]] + self.data[recv_data[1] + 1:]
+		plain_data = crypto.Dec(mode, self.data, key, iv)
+		if recv_data[0] == "I":
+			plain_data = plain_data[:recv_data[1]] + recv_data[2] + plain_data[recv_data[1]:]
+		elif recv_data[0] == "D":
+			plain_data = plain_data[:recv_data[1]] + plain_data[recv_data[1] + 1:]
+		self.data = crypto.Enc(mode, plain_data, key, iv) 
 
 	def Send(self):
 		while True:
 			while self.flag == 1:
 				pass
 			modi_data = self.input_queue.get()
-			self.sock.send(pickle.dumps(modi_data))
-			self.flag = 1
 			self.Modification(modi_data)
-			
+			self.sock.send(pickle.dumps(self.data))
+			self.flag = 1
+
 	def Recv(self):
 		while True:
 			recv_data = self.sock.recv(self.buf)
-			load_data = pickle.loads(recv_data)
+			load_data = pickle.dumps(recv_data)
 			if load_data == "Success":
 				self.flag = 0
 			else:
-				self.Modification(load_data)
+				self.data = load_data
+	
+	def main(self, port)
 
-	def main(self, port):
-		
 		self.sock.connect(("127.0.0.1", port))
 
 		recv_data = self.sock.recv(self.buf)
-		load_data = pickle.loads(recv_data)
-		self.data = load_data
+		self.data = pickle.loads(recv_data)
 
-		send_thread = threading.Thread(target = self.Send)
+		send_thread = threading.Thread(target = self.send)
 		send_thread.start()
 
 		recv_thread = threading.Thread(target = self.Recv)
 		recv_thread.start()
 
-		recv_thread.start()
-						
