@@ -173,6 +173,10 @@ class Client:
 		recv_data = self.sock.recv(self.buf)
 		load_data = pickle.loads(recv_data)
 		self.data = load_data
+		plain_text = core.decrypt(self.data, self.key)
+		with open("test.txt", 'w') as f:
+			f.write(''.join(plain_text))
+			f.close()
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()

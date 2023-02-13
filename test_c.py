@@ -5,7 +5,9 @@ import protocol
 import newEditor
 from socket import *
 from queue import Queue
+import curses
 import signal
+import sys
 import pickle
 
 def handler(signum, frame):
@@ -50,11 +52,13 @@ port = 8081
 client.main(port)
 
 signal.signal(signal.SIGINT, handler)
-
-#while True:
-#	modi_info = get_modi_info()
-#	tmp_queue.put(modi_info)
-
-curses.wrapper(newEditor.main)
+'''
+flag = '0'
+while flag == '0':
+	modi_info = get_modi_info()
+	tmp_queue.put(modi_info)
+	flag = input("If you want to break, press 0: ")
+'''
+curses.wrapper(newEditor.main, tmp_queue)
 
 
