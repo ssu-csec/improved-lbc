@@ -114,6 +114,4 @@ class Client:
 
 		recv_thread = threading.Thread(target = self.Recv)
 		recv_thread.start()
-
-		recv_thread.start()
 						
