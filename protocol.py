@@ -71,9 +71,9 @@ class Server:
 						f.close()
 					return
 			elif type(modi_info) == type([]) and modi_info[0] == 'G':
-				send_queue.put([conn, modi_info])
-				data.global_meta = modi_info[1].global_meta
-				data.data = modi_info[1].data
+				self.send_queue.put([conn, modi_info])
+				self.data.global_meta = modi_info[1].global_meta
+				self.data.data = modi_info[1].data
 				self.count -= 10
 			else:
 				self.send_queue.put([conn, recv_data])
@@ -118,9 +118,9 @@ class Client:
 	def gathering(self):
 		plain = core.decrypt(self.data, self.key)
 		global_str = core.gen_global(len(plain))
-		self.data.global_meta = core.global_enc(global_str, key)
+		self.data.global_meta = core.global_enc(global_str, self.key)
 		iv = random.randint(0,255)
-		self.data.data = core.encrypt(plain, key, iv, iv)
+		self.data.data = core.encrypt(plain, self.key, iv, iv)
 		self.sock.sendall(pickle.dumps(['G', self.data]))
 	
 	def Conflict_Handling(self, request):
@@ -153,7 +153,7 @@ class Client:
 			recv_data = self.sock.recv(self.buf)
 			load_data = pickle.loads(recv_data)
 			if load_data == "Gathering":
-				print("Gathering request")
+				#print("Gathering request")
 				self.gathering()
 			elif load_data == "Success":
 				#print("Get Success!!")
