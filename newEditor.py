@@ -3,6 +3,8 @@
 import curses
 import sys
 import argparse
+from queue import Queue
+
 
 class Window:
 	def __init__(self, n_rows, n_cols, row = 0, col = 0):
@@ -88,9 +90,9 @@ class Buffer:
 
 	def insert(self, cursor, string):
 		row, col = cursor.row, cursor.col
-		if row == 0 and col == 0:
-			self.lines.append([])
-			self.lines[row].extend(string)
+		if len(self.lines) == 0:
+			self.lines.append("")
+			self.lines[row] += string
 		else:
 			current = self.lines.pop(row)
 			new = current[:col] + string + current[col:]
@@ -106,7 +108,7 @@ class Buffer:
 		row, col = cursor.row, cursor.col
 		if (row, col) < (self.bottom, len(self[row])):
 			current = self.lines.pop(row)
-			if col < len(self[row]):
+			if col < len(current):
 				new = current[:col] + current[col + 1:]
 				self.lines.insert(row, new)
 			else:
@@ -173,7 +175,7 @@ def main(stdscr, input_queue):
 			for i in range(cursor.row):
 				index += len(buffer.lines[i])
 			index += cursor.col
-			print("Delete index is ", index)
+			#print("Delete index is ", index)
 			input_queue.put(["D", index])
 		elif k in ("KEY_BACKSPACE", "\x7f"):
 			if (cursor.row, cursor.col) > (0, 0):
@@ -183,8 +185,8 @@ def main(stdscr, input_queue):
 			for i in range(cursor.row):
 				index += len(buffer.lines[i])
 			index += cursor.col
-			print("backspace index is ", index)
-			input_queue.put(["D", index])
+			#print("backspace index is ", index)
+			#input_queue.put(["D", index])
 		else:
 			buffer.insert(cursor, k)
 			for _ in k:
@@ -193,8 +195,9 @@ def main(stdscr, input_queue):
 			for i in range(cursor.row):
 				index += len(buffer.lines[i])
 			index += cursor.col
-			print("Input index is ", index)
+			#print("Input index is ", index)
 			input_queue.put(["I", index, k])
 
 if __name__ == "__main__":
-	curses.wrapper(main)
+	input_queue = Queue()
+	curses.wrapper(main, input_queue)
