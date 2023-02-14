@@ -134,6 +134,8 @@ def main(stdscr, input_queue):
 
 	window = Window(curses.LINES - 1, curses.COLS - 1)
 	cursor = Cursor()
+	
+	stdscr.nodelay(True)
 
 	while True:
 		stdscr.erase()
@@ -145,7 +147,10 @@ def main(stdscr, input_queue):
 			stdscr.addstr(row, 0, line)
 		stdscr.move(*window.translate(cursor))
 
-		k = stdscr.getkey()
+		try:
+			k = stdscr.getkey()
+		except:
+			continue
 
 		if k == "KEY_F(8)":
 			sys.exit(0)
@@ -167,6 +172,11 @@ def main(stdscr, input_queue):
 			#window.horizontal_scroll(cursor)
 			right(window, buffer, cursor)
 		elif k == "\n":
+			index = -1
+			for i in range(cursor.row):
+				index += len(buffer.lines[i])
+			index += cursor.col
+			input_queue.put(["I", index, k])
 			buffer.split(cursor)
 			right(window, buffer, cursor)
 		elif k in ("KEY_DELETE", "\x04", "KEY_DC"):
@@ -186,12 +196,12 @@ def main(stdscr, input_queue):
 				index += len(buffer.lines[i])
 			index += cursor.col
 			#print("backspace index is ", index)
-			#input_queue.put(["D", index])
+			input_queue.put(["D", index])
 		else:
 			buffer.insert(cursor, k)
 			for _ in k:
 				right(window, buffer, cursor)
-			index = 0
+			index = -1
 			for i in range(cursor.row):
 				index += len(buffer.lines[i])
 			index += cursor.col
