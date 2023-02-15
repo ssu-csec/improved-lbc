@@ -174,7 +174,6 @@ def insert(insert_str, index, input_data, key):
 		f_link = random.randint(0,255)
 		b_link = f_link	
 	else:
-		index -= 1
 		in_index = index
 		block_index = search_block_index(global_str, index)
 
