@@ -102,6 +102,7 @@ class Buffer:
 		row, col = cursor.row, cursor.col
 		current = self.lines.pop(row)
 		self.lines.insert(row, current[:col])
+		#self.lines[row] += "\n"
 		self.lines.insert(row + 1, current[col:])
 
 	def delete(self, cursor):
@@ -166,18 +167,28 @@ def main(stdscr, input_queue):
 			cursor.up(buffer)
 			window.up(cursor)
 			window.horizontal_scroll(cursor)
-			index = -1
+			index = 0
 			for i in range(cursor.row):
 				index += len(buffer.lines[i])
+				index += 1
 			index += cursor.col
+			#if cursor.row != 0 and cursor.col <= len(buffer.lines[cursor.row - 1]):
+			#	index -= len(buffer.lines[cursor.row - 1])
+			#elif cursor.row != 0 and cursor.col > len(buffer.lines[cursor.row - 1]):
+			#	index -= cursor.col
 		elif k == "KEY_DOWN":
 			cursor.down(buffer)
 			window.down(buffer, cursor)
 			window.horizontal_scroll(cursor)
-			index = -1
+			index = 0
 			for i in range(cursor.row):
 				index += len(buffer.lines[i])
+				index += 1
 			index += cursor.col
+			#if cursor.row < buffer.bottom and cursor.col <= len(buffer.lines[cursor.row + 1]):
+			#	index += len(buffer.lines[cursor.row])
+			#elif cursor.row < buffer.bottom and cursor.col > len(buffer.lines[cursor.row + 1]):
+			#	index = index + len(buffer.lines[cursor.row]) + len(buffer.lines[cursor.row + 1]) - cursor.col
 		elif k == "KEY_LEFT":
 			cursor.left(buffer)
 			window.up(cursor)
@@ -197,33 +208,20 @@ def main(stdscr, input_queue):
 			index += 1
 			buffer.split(cursor)
 			right(window, buffer, cursor)
+			right(window, buffer, cursor)
 		elif k in ("KEY_DELETE", "\x04", "KEY_DC"):
 			buffer.delete(cursor)
-			#index = 0
-			#for i in range(cursor.row):
-			#	index += len(buffer.lines[i])
-			#index += cursor.col
-			#print("Delete index is ", index)
 			input_queue.put(["D", index])
 		elif k in ("KEY_BACKSPACE", "\x7f"):
 			if (cursor.row, cursor.col) > (0, 0):
 				left(window, buffer, cursor)
 				buffer.delete(cursor)
-			index -= 1
-			#for i in range(cursor.row):
-			#	index += len(buffer.lines[i])
-			#index += cursor.col
-			#print("backspace index is ", index)
 			input_queue.put(["D", index])
+			index -= 1
 		else:
 			buffer.insert(cursor, k)
 			for _ in k:
 				right(window, buffer, cursor)
-			#for i in range(cursor.row):
-			#	index += len(buffer.lines[i])
-			#index += cursor.col
-			#print("Input index is ", index)
-			
 			input_queue.put(["I", index, k])
 			index += 1
 

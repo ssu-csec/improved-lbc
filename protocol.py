@@ -68,7 +68,6 @@ class Server:
 				if len(self.client_group) == 0:
 					with open('server_data.p', 'wb') as f:
 						pickle.dump(self.data, f)
-						f.close()
 					return
 			elif type(modi_info) == type([]) and modi_info[0] == 'G':
 				self.send_queue.put([conn, modi_info])
@@ -145,6 +144,13 @@ class Client:
 				send_data = core.insert(modi_info[2], modi_info[1], self.data, self.key)
 			elif modi_info[0] == "D":
 				send_data = core.delete(1, modi_info[1], self.data, self.key)
+				#Debug
+			plainDebug = core.decrypt(self.data, self.key)
+			with open("./Debug.txt", "a") as f:
+				f.write(str(modi_info))
+				f.write("\n")
+				f.write(''.join(plainDebug))
+				f.write("\n==========\n")
 			self.sock.sendall(pickle.dumps(send_data))
 			self.flag = 1
 	
@@ -176,7 +182,6 @@ class Client:
 		plain_text = core.decrypt(self.data, self.key)
 		with open("test.txt", 'w') as f:
 			f.write(''.join(plain_text))
-			f.close()
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
