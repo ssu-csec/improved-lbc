@@ -40,9 +40,11 @@ key = core.gen_key(raw_key)
 #iv = 'Initial Vector 1')											# exprot
 tmp_queue = Queue()
 
+flag = 0
+
 clientSock = socket(AF_INET, SOCK_STREAM)
 
-client = protocol.Client(clientSock, key, tmp_queue)
+client = protocol.Client(clientSock, key, tmp_queue, flag)
 
 #client = noneprot.Client(clientSock, tmp_queue)					# noneprot
 
@@ -59,6 +61,14 @@ while flag == '0':
 	tmp_queue.put(modi_info)
 	flag = input("If you want to break, press 0: ")
 '''
-curses.wrapper(newEditor.main, tmp_queue)
+curses.wrapper(newEditor.main, tmp_queue, flag)
+
+'''
+while True:
+	try:
+		pass
+	except KeyboardInterrupt:
+		print("Program exit!!")
+'''
 
 

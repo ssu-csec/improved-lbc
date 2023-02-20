@@ -10,3 +10,11 @@ server = protocol.Server(port)
 #server = exprot.Server(port)					# exprot
 server.main()
 
+'''
+while True:
+	try:
+		pass
+	except KeyboardInterrupt:
+		print("server byebye!")
+'''
+
