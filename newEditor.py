@@ -128,7 +128,7 @@ def left(window, buffer, cursor):
 	window.up(cursor)
 	window.horizontal_scroll(cursor)
 
-def main(stdscr, input_queue):
+def main(stdscr, input_queue, flag):
 
 	with open("test.txt") as f:
 		buffer = Buffer(f.read().splitlines())
@@ -227,4 +227,4 @@ def main(stdscr, input_queue):
 
 if __name__ == "__main__":
 	input_queue = Queue()
-	curses.wrapper(main, input_queue)
+	curses.wrapper(main, input_queue, flag)

@@ -105,13 +105,14 @@ class Server:
 			recv_thread.start()
 
 class Client:
-	def __init__(self, sock, key, input_queue):
+	def __init__(self, sock, key, input_queue, flag):
 		self.buf = 1024*32
 		self.sock = sock
 		self.data = core.Data()
 		self.key = key
 		self.input_queue = input_queue
 		self.tmp_data = []
+		self.outer_flag = flag
 		self.flag = 0
 		
 	def gathering(self):
@@ -171,6 +172,7 @@ class Client:
 				self.data.global_meta = load_data[1].global_meta
 				self.data.data = load_data[1].data
 			else:
+				self.outer_flag = 1
 				load_data.unpacking(self.data)
 	def main(self, port):
 		
