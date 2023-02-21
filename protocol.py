@@ -146,12 +146,14 @@ class Client:
 			elif modi_info[0] == "D":
 				send_data = core.delete(1, modi_info[1], self.data, self.key)
 				#Debug
+			'''
 			plainDebug = core.decrypt(self.data, self.key)
 			with open("./Debug.txt", "a") as f:
 				f.write(str(modi_info))
 				f.write("\n")
 				f.write(''.join(plainDebug))
 				f.write("\n==========\n")
+			'''
 			self.sock.sendall(pickle.dumps(send_data))
 			self.flag = 1
 	
@@ -172,7 +174,7 @@ class Client:
 				self.data.global_meta = load_data[1].global_meta
 				self.data.data = load_data[1].data
 			else:
-				self.outer_flag = 1
+				self.outer_flag[0] = True
 				load_data.unpacking(self.data)
 	def main(self, port):
 		

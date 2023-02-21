@@ -40,7 +40,7 @@ key = core.gen_key(raw_key)
 #iv = 'Initial Vector 1')											# exprot
 tmp_queue = Queue()
 
-flag = 0
+flag = [False]
 
 clientSock = socket(AF_INET, SOCK_STREAM)
 
