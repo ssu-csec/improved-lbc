@@ -147,6 +147,7 @@ def main(stdscr, input_queue, flag):
 	#time.sleep(2)
 	
 	while True:
+#		add file update and print data on the screen code when there exists new version ofthe file 
 		stdscr.erase()
 		for row, line in enumerate(buffer[window.row : window.row + window.n_rows]):
 			if row == cursor.row - window.row and window.col > 0:
