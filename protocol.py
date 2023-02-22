@@ -3,6 +3,7 @@ from queue import Queue
 import pickle
 import random
 import threading
+import aes
 import core
 
 class Server:
@@ -33,7 +34,6 @@ class Server:
 		else:
 			for data in conflict_list:
 				self.send_queue.put(data)
-
 	def Send(self):
 		while True:
 			if self.send_queue.qsize() > 1:
@@ -133,6 +133,37 @@ class Client:
 		self.tmp_data = request
 		self.flag = 1
 	
+	def file_updata(self, f_name, modi_info):
+		with open(f_name, 'r') as f:
+			f_data = f.read()
+		if type(modi_info) == type([]):				# modify inside
+			if modi_info[0] == "I":
+				f_data = f_data[:modi_info[1]] + modi_info[2] + f_data[modi_info[1]:]
+			elif modi_info[0] == "D":
+				f_data = f_data[:modi_info[1]] + f_data[modi_info[1] + 1:]
+
+		else:										# modify outside
+			global_str = core.global_dec(self.data.global_meta, self.key)
+			del_len = 0
+			for del_index in modi_info.del_list:
+				del_len += global_str[del_index]
+			del_start = 0
+			for pre_index in range(modi_info.del_list[-1]):
+				del_start += global_str[pre_index]
+			f_data = f_data[:del_start] + f_data[del_start + del_len:]
+			global_str = core.global_dec(modi_info.glob_list, self.key)
+			ins_data = ''
+			ins_index = modi_info.ins_list[0]
+			back_link = 0
+			for ins_block in modi_info.ins_list[1:]:
+				dec_block = dec_one(ins_block, self.key, back_link, ins_index)
+				back_link = dec_block.pop()
+				dec_block = dec_block[:global_str[i]]
+				ins_data += aes.hex2str(dec_block)
+			f_data = f_data[:del_start] + ins_data + f_data[del_start:]
+		with open(f_name, 'w'):
+			f.write(f_data)
+
 	def Send(self):
 		while True:
 			while self.flag == 1:
@@ -141,6 +172,7 @@ class Client:
 			self.tmp_data = modi_info
 			#send_data = core.Modi_list(0,0)
 			#print("tmp data is ", self.tmp_data)
+			self.file_update("test.txt", modi_info)
 			if modi_info[0] == "I":
 				send_data = core.insert(modi_info[2], modi_info[1], self.data, self.key)
 			elif modi_info[0] == "D":
@@ -175,7 +207,9 @@ class Client:
 				self.data.data = load_data[1].data
 			else:
 				self.outer_flag[0] = True
+				self.file_update("text.txt", load_data)
 				load_data.unpacking(self.data)
+	
 	def main(self, port):
 		
 		self.sock.connect(("127.0.0.1", port))
