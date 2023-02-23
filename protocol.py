@@ -133,7 +133,7 @@ class Client:
 		self.tmp_data = request
 		self.flag = 1
 	
-	def file_updata(self, f_name, modi_info):
+	def file_update(self, f_name, modi_info):
 		with open(f_name, 'r') as f:
 			f_data = f.read()
 		if type(modi_info) == type([]):				# modify inside
@@ -156,12 +156,13 @@ class Client:
 			ins_index = modi_info.ins_list[0]
 			back_link = 0
 			for ins_block in modi_info.ins_list[1:]:
-				dec_block = dec_one(ins_block, self.key, back_link, ins_index)
+				dec_block = core.dec_one(ins_block, self.key, back_link, ins_index)
 				back_link = dec_block.pop()
-				dec_block = dec_block[:global_str[i]]
-				ins_data += aes.hex2str(dec_block)
+				dec_block = dec_block[:global_str[ins_index]]
+				ins_data += ''.join(aes.hex2str(dec_block))
+				ins_index += 1
 			f_data = f_data[:del_start] + ins_data + f_data[del_start:]
-		with open(f_name, 'w'):
+		with open(f_name, 'w') as f:
 			f.write(f_data)
 
 	def Send(self):
@@ -207,7 +208,7 @@ class Client:
 				self.data.data = load_data[1].data
 			else:
 				self.outer_flag[0] = True
-				self.file_update("text.txt", load_data)
+				self.file_update("test.txt", load_data)
 				load_data.unpacking(self.data)
 	
 	def main(self, port):
