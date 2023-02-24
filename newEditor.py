@@ -153,8 +153,8 @@ def main(stdscr, input_queue, flag):
 
 		for i in range(len(buffer.lines)):
 			buffer.lines[i] += "\n"
-		#add file update and print data on the screen code when there exists new version ofthe file 
 		stdscr.erase()
+		
 		for row, line in enumerate(buffer[window.row : window.row + window.n_rows]):
 			if row == cursor.row - window.row and window.col > 0:
 				line = "<<" + line[window.col + 1:]

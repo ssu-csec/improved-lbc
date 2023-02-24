@@ -5,7 +5,7 @@ import pickle
 import threading
 
 class Server:
-	def __init__(self.port):
+	def __init__(self, port):
 		self.buf = 1024*32
 		self.port = port
 		self.data = b''
@@ -41,7 +41,7 @@ class Server:
 
 	def main(self):
 		serverSock = socket(AF_INET, SOCK_STREAM)
-		serverSock.bind('', self.port)
+		serverSock.bind(('', self.port))
 		serverSock.listen(10)
 		
 		with open("ex_data.p", 'wb') as f:
@@ -63,7 +63,7 @@ class Server:
 			recv_thread.start()
 
 class Client:
-	def __init__(self, sock, input_queue, mode, key, initial_vector)
+	def __init__(self, sock, input_queue, mode, key, initial_vector):
 		self.sock = sock
 		self.buf = 1024*32
 		self.data = b''
@@ -74,12 +74,12 @@ class Client:
 		self.iv = initial_vector
 
 	def Modification(self, recv_data):
-		plain_data = crypto.Dec(mode, self.data, key, iv)
+		plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 		if recv_data[0] == "I":
 			plain_data = plain_data[:recv_data[1]] + recv_data[2] + plain_data[recv_data[1]:]
 		elif recv_data[0] == "D":
 			plain_data = plain_data[:recv_data[1]] + plain_data[recv_data[1] + 1:]
-		self.data = crypto.Enc(mode, plain_data, key, iv) 
+		self.data = crypto.Enc(self.mode, plain_data, self.key, self.iv) 
 
 	def Send(self):
 		while True:
@@ -87,6 +87,9 @@ class Client:
 				pass
 			modi_data = self.input_queue.get()
 			self.Modification(modi_data)
+			plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
+			with open("test.txt", 'w') as f:
+				f.write(plain_data)
 			self.sock.send(pickle.dumps(self.data))
 			self.flag = 1
 
@@ -98,8 +101,11 @@ class Client:
 				self.flag = 0
 			else:
 				self.data = load_data
+				plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
+				with open("test.txt", 'w') as f:
+					f.write(plain_data)
 	
-	def main(self, port)
+	def main(self, port):
 
 		self.sock.connect(("127.0.0.1", port))
 

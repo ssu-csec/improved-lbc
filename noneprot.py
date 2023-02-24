@@ -91,6 +91,8 @@ class Client:
 			self.sock.send(pickle.dumps(modi_data))
 			self.flag = 1
 			self.Modification(modi_data)
+			with open("test.txt", 'w') as f:
+				f.write(''.join(self.data))
 			
 	def Recv(self):
 		while True:
@@ -100,7 +102,8 @@ class Client:
 				self.flag = 0
 			else:
 				self.Modification(load_data)
-
+				with open("test.txt", 'w') as f:
+					f.write(''.join(self.data))
 	def main(self, port):
 		
 		self.sock.connect(("127.0.0.1", port))
