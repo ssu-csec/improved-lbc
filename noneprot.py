@@ -4,12 +4,13 @@ import pickle
 import threading
 
 class Server:
-	def __init__(self, port):
+	def __init__(self, port, f_name):
 		self.port = port
-		self.buf = 1024*8
+		self.buf = 1024*16
 		self.client_group = []
 		self.send_queue = Queue()
 		self.data = []
+		self.f_name = f_name
 
 	def Modification(self, recv_data):
 		if recv_data[0] == "I":
@@ -38,7 +39,7 @@ class Server:
 				self.client_group.remove(conn)
 				if len(self.client_group) == 0:
 					data_str = ''.join(str(s) for s in self.data)
-					with open("none_data.txt", "w") as f:
+					with open(self.f_name, "w") as f:
 						f.write(data_str)
 						f.close
 					return
@@ -51,10 +52,10 @@ class Server:
 		serverSock.bind(('', self.port))
 		serverSock.listen(10)
 		
-		data_str = ''.join(str(s) for s in self.data)
-		with open("none_data.txt", 'w') as f:
-			f.write(data_str)
-			f.close()
+		#data_str = ''.join(str(s) for s in self.data)
+		#with open(self.f_name, 'w') as f:
+		#	f.write(data_str)
+		#	f.close()
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
@@ -62,7 +63,7 @@ class Server:
 		while True:
 			connectionSock, addr = serverSock.accept()
 			if len(self.client_group) == 0:
-				with open("none_data.txt", 'r') as f:
+				with open(self.f_name, 'r') as f:
 					self.data = f.read()
 			self.client_group.append(connectionSock)
 			print("Connected to new client ", str(addr))
@@ -72,7 +73,7 @@ class Server:
 class Client:
 	def __init__(self, sock, input_queue):
 		self.sock = sock
-		self.buf = 1024*8
+		self.buf = 1024*16
 		self.data = []
 		self.input_queue = input_queue
 		self.flag = 0
@@ -104,13 +105,15 @@ class Client:
 				self.Modification(load_data)
 				with open("test.txt", 'w') as f:
 					f.write(''.join(self.data))
-	def main(self, port):
+	def main(self, ip_address, port):
 		
-		self.sock.connect(("127.0.0.1", port))
+		self.sock.connect((ip_address, port))
 
 		recv_data = self.sock.recv(self.buf)
 		load_data = pickle.loads(recv_data)
 		self.data = load_data
+		with open("test.txt", "w") as f:
+			f.write(''.join(self.data))
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()

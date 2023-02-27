@@ -2,16 +2,13 @@ import core
 import protocol
 import noneprot
 
-port = 8081
+port = int(input("Input port number: "))
+size = input("Choose size of the data: ")
 
-server = noneprot.Server(port)	
+f_name = "none_server_" + size + ".txt"
+
+server = noneprot.Server(port, f_name)	
+
 server.main()
 
-'''
-while True:
-	try:
-		pass
-	except KeyboardInterrupt:
-		print("server byebye!")
-'''
 
