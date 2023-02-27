@@ -148,8 +148,9 @@ class Client:
 			for del_index in modi_info.del_list:
 				del_len += global_str[del_index]
 			del_start = 0
-			for pre_index in range(modi_info.del_list[-1]):
-				del_start += global_str[pre_index]
+			if len(modi_info.del_list) != 0:
+				for pre_index in range(modi_info.del_list[-1]):
+					del_start += global_str[pre_index]
 			f_data = f_data[:del_start] + f_data[del_start + del_len:]
 			global_str = core.global_dec(modi_info.glob_list, self.key)
 			ins_data = ''
@@ -211,9 +212,9 @@ class Client:
 				self.file_update("test.txt", load_data)
 				load_data.unpacking(self.data)
 	
-	def main(self, port):
+	def main(self, ip_address, port):
 		
-		self.sock.connect(("127.0.0.1", port))
+		self.sock.connect((ip_address, port))
 
 		recv_data = self.sock.recv(self.buf)
 		load_data = pickle.loads(recv_data)

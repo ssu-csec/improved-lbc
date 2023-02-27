@@ -202,9 +202,9 @@ def main(stdscr, input_queue, flag):
 			window.horizontal_scroll(cursor)
 			index -= 1
 		elif k == "KEY_RIGHT":
-			#cursor.right(buffer)
-			#window.down(buffer, cursor)
-			#window.horizontal_scroll(cursor)
+			cursor.right(buffer)
+			window.down(buffer, cursor)
+			window.horizontal_scroll(cursor)
 			right(window, buffer, cursor)
 			index += 1
 		elif k == "\n":
@@ -222,9 +222,10 @@ def main(stdscr, input_queue, flag):
 		elif k in ("KEY_BACKSPACE", "\x7f"):
 			if (cursor.row, cursor.col) > (0, 0):
 				left(window, buffer, cursor)
+				index -= 1
 				buffer.delete(cursor)
 			input_queue.put(["D", index])
-			index -= 1
+			#index -= 1
 		else:
 			buffer.insert(cursor, k)
 			for _ in k:
