@@ -43,6 +43,7 @@ tmp_queue = Queue()
 flag = [False]
 
 ip_address = input("Input ip address: ")
+int(port = input("Input port number: "))
 
 clientSock = socket(AF_INET, SOCK_STREAM)
 
@@ -51,7 +52,7 @@ client = protocol.Client(clientSock, key, tmp_queue, flag)
 #client = noneprot.Client(clientSock, tmp_queue)					# noneprot
 
 #client = exprot.Client(clientSock, tmp_queue, mode, raw_key, iv)	# exprot
-port = 8081
+#port = 8081
 
 
 client.main(ip_address, port)
