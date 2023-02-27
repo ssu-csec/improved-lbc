@@ -43,7 +43,7 @@ tmp_queue = Queue()
 flag = [False]
 
 ip_address = input("Input ip address: ")
-int(port = input("Input port number: "))
+port = int(input("Input port number: "))
 
 clientSock = socket(AF_INET, SOCK_STREAM)
 

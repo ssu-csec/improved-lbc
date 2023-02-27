@@ -5,7 +5,7 @@ import protocol
 
 #port = 8081
 
-int(port = input("Input port number: "))
+port = int(input("Input port number: "))
 server = protocol.Server(port)
 #server = noneprot.Server(port)					# noneprot
 #server = exprot.Server(port)					# exprot
