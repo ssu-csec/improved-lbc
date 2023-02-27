@@ -1,21 +1,10 @@
 import core
 import protocol
-#import noneprot								# noneprot
-#import exprot									# exprot
-
-#port = 8081
 
 port = int(input("Input port number: "))
-server = protocol.Server(port)
-#server = noneprot.Server(port)					# noneprot
-#server = exprot.Server(port)					# exprot
+size = input("Choose size of the data: ")
+f_name = "test_server_" + size + ".p"
+server = protocol.Server(port, f_name)
 server.main()
 
-'''
-while True:
-	try:
-		pass
-	except KeyboardInterrupt:
-		print("server byebye!")
-'''
 

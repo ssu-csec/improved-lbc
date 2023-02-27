@@ -7,13 +7,14 @@ import aes
 import core
 
 class Server:
-	def __init__(self, port):
+	def __init__(self, port, f_name):
 		self.buf = 1024*32
 		self.send_queue = Queue()
 		self.client_group = []
 		self.data = core.Data()
 		self.count = 0
 		self.port = port
+		self.f_name = f_name
 
 	def Conflict_Handling(self, conflict_list):
 		print("Conflict Handling!")
@@ -66,7 +67,7 @@ class Server:
 				print("Client byebye")
 				self.client_group.remove(conn)
 				if len(self.client_group) == 0:
-					with open('server_data.p', 'wb') as f:
+					with open(self.f_name, 'wb') as f:
 						pickle.dump(self.data, f)
 					return
 			elif type(modi_info) == type([]) and modi_info[0] == 'G':
@@ -88,16 +89,16 @@ class Server:
 		serverSock.bind(('', self.port))
 		serverSock.listen(10)
 
-		with open("server_data.p", 'wb') as f:
-			pickle.dump(self.data, f)
-			f.close()
+		#with open("server_data.p", 'wb') as f:
+		#	pickle.dump(self.data, f)
+		#	f.close()
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
 		while True:
 			connectionSock, addr = serverSock.accept()
 			if len(self.client_group) == 0:
-				with open("server_data.p", 'rb') as f:
+				with open(self.f_name, 'rb') as f:
 					self.data = pickle.load(f)
 			self.client_group.append(connectionSock)
 			print("Connected to new client ", str(addr))
@@ -163,7 +164,7 @@ class Client:
 				ins_data += ''.join(aes.hex2str(dec_block))
 				ins_index += 1
 			f_data = f_data[:del_start] + ins_data + f_data[del_start:]
-		with open(f_name, 'w') as f:
+		with open("test.txt", 'w') as f:
 			f.write(f_data)
 
 	def Send(self):
