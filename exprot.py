@@ -5,12 +5,13 @@ import pickle
 import threading
 
 class Server:
-	def __init__(self, port):
+	def __init__(self, port, f_name):
 		self.buf = 1024*32
 		self.port = port
 		self.data = b''
 		self.client_group = []
 		self.send_queue = Queue()
+		self.f_name = f_name
 
 	def Send(self):
 		while True:
@@ -31,7 +32,7 @@ class Server:
 				print("client_byebye")
 				self.client_group.remove(conn)
 				if len(self.client_group) == 0:
-					with open('ex_data.p', 'wb') as f:
+					with open(self.f_name, 'wb') as f:
 						f.write(self.data)
 						f.close
 					return
@@ -44,9 +45,9 @@ class Server:
 		serverSock.bind(('', self.port))
 		serverSock.listen(10)
 		
-		with open("ex_data.p", 'wb') as f:
-			f.write(self.data)
-			f.close
+		#with open(self.f_name, 'wb') as f:
+		#	f.write(self.data)
+		#	f.close
 
 		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
@@ -54,7 +55,7 @@ class Server:
 		while True:
 			connectionSock, addr = serverSock.accept()
 			if len(self.client_group) == 0:
-				with open("ex.data.p", 'rb') as f:
+				with open(self.f_name, 'rb') as f:
 					self.data = f.read()
 			self.client_group.append(connectionSock)
 			print("Connected to new client", str(addr))
@@ -105,14 +106,17 @@ class Client:
 				with open("test.txt", 'w') as f:
 					f.write(plain_data)
 	
-	def main(self, port):
+	def main(self, ip_address, port):
 
-		self.sock.connect(("127.0.0.1", port))
+		self.sock.connect((ip_address, port))
 
 		recv_data = self.sock.recv(self.buf)
 		self.data = pickle.loads(recv_data)
+		plain_text = crypto.Dec(self.mode, self.data, self.key, self.iv)
+		with open("test.txt", 'w') as f:
+			f.write(plain_text)
 
-		send_thread = threading.Thread(target = self.send)
+		send_thread = threading.Thread(target = self.Send)
 		send_thread.start()
 
 		recv_thread = threading.Thread(target = self.Recv)

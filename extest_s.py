@@ -2,17 +2,13 @@ import core
 import protocol
 import exprot					
 
-port = 8081
+port = int(input("Input port number: "))
+size = input("Choose size of the data: ")
+mode = input("Choose mode CTR or CBC: ")
+f_name = "ex_server_" + size + "_" + mode + ".p"
 
-server = exprot.Server(port)	
+server = exprot.Server(port, f_name)	
 
 server.main()
 
-'''
-while True:
-	try:
-		pass
-	except KeyboardInterrupt:
-		print("server byebye!")
-'''
 
