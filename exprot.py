@@ -21,7 +21,7 @@ class Server:
 					self.client_group[i].send(recv[1])
 				else:
 					sender = i
-			self.client_group[sender].send(pickle.dumps("Success"))
+			self.client_group[sender].sendall(pickle.dumps("Success"))
 
 	def Recv(self, conn):
 		conn.sendall(pickle.dumps(self.data))
@@ -97,7 +97,7 @@ class Client:
 	def Recv(self):
 		while True:
 			recv_data = self.sock.recv(self.buf)
-			load_data = pickle.dumps(recv_data)
+			load_data = pickle.loads(recv_data)
 			if load_data == "Success":
 				self.flag = 0
 			else:
