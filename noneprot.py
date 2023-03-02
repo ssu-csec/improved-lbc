@@ -2,6 +2,7 @@ from socket import *
 from queue import Queue
 import pickle
 import threading
+import time
 
 class Server:
 	def __init__(self, port, f_name):
@@ -85,10 +86,19 @@ class Client:
 			self.data = self.data[:recv_data[1]] + self.data[recv_data[1] + 1:]
 
 	def Send(self):
+		start = 0
+		end = 0
+		time_i = 0
 		while True:
 			while self.flag == 1:
 				pass
+			end = time.time()
+			with open("nonetime_check.txt", 'a') as f:
+				tmp_str = str(time_i) + " : " + str(end - start) + "\n"
+				f.write(tmp_str)
+				time_i += 1
 			modi_data = self.input_queue.get()
+			start = time.time()
 			self.sock.send(pickle.dumps(modi_data))
 			self.flag = 1
 			self.Modification(modi_data)

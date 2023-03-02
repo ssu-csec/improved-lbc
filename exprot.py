@@ -3,10 +3,11 @@ from queue import Queue
 import crypto
 import pickle
 import threading
+import time
 
 class Server:
 	def __init__(self, port, f_name):
-		self.buf = 1024*32
+		self.buf = 1024*256
 		self.port = port
 		self.data = b''
 		self.client_group = []
@@ -66,7 +67,7 @@ class Server:
 class Client:
 	def __init__(self, sock, input_queue, mode, key, initial_vector):
 		self.sock = sock
-		self.buf = 1024*32
+		self.buf = 1024*256
 		self.data = b''
 		self.input_queue = input_queue
 		self.flag = 0
@@ -83,10 +84,19 @@ class Client:
 		self.data = crypto.Enc(self.mode, plain_data, self.key, self.iv) 
 
 	def Send(self):
+		start = 0
+		end = 0
+		time_i = 0
 		while True:
 			while self.flag == 1:
 				pass
+			end = time.time()
+			with open("extime_check.txt", 'a') as f:
+				tmp_str = str(time_i) + " : " + str(end - start) + "\n"
+				f.write(tmp_str)
+				time_i += 1
 			modi_data = self.input_queue.get()
+			start = time.time()
 			self.Modification(modi_data)
 			plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 			with open("test.txt", 'w') as f:

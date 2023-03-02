@@ -22,8 +22,6 @@ mode = input("Please choose mode. CTR or CBC? ")
 iv = 'Initial Vector 1'											
 tmp_queue = Queue()
 
-flag = [False]
-
 clientSock = socket(AF_INET, SOCK_STREAM)
 
 client = exprot.Client(clientSock, tmp_queue, mode, raw_key, iv)
@@ -34,7 +32,7 @@ client.main(ip_address, port)
 
 signal.signal(signal.SIGINT, handler)
 
-curses.wrapper(newEditor.main, tmp_queue, flag)
+curses.wrapper(newEditor.main, tmp_queue)
 
 
 

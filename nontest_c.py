@@ -14,10 +14,7 @@ def handler(signum, frame):
 
 tmp_queue = Queue()
 
-flag = [False]
-
 clientSock = socket(AF_INET, SOCK_STREAM)
-
 
 client = noneprot.Client(clientSock, tmp_queue)					
 
@@ -28,7 +25,7 @@ client.main(ip_address, port)
 
 signal.signal(signal.SIGINT, handler)
 
-curses.wrapper(newEditor.main, tmp_queue, flag)
+curses.wrapper(newEditor.main, tmp_queue)
 
 
 

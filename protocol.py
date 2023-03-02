@@ -5,6 +5,7 @@ import random
 import threading
 import aes
 import core
+import time
 
 class Server:
 	def __init__(self, port, f_name):
@@ -106,14 +107,13 @@ class Server:
 			recv_thread.start()
 
 class Client:
-	def __init__(self, sock, key, input_queue, flag):
+	def __init__(self, sock, key, input_queue):
 		self.buf = 1024*32
 		self.sock = sock
 		self.data = core.Data()
 		self.key = key
 		self.input_queue = input_queue
 		self.tmp_data = []
-		self.outer_flag = flag
 		self.flag = 0
 		
 	def gathering(self):
@@ -168,10 +168,19 @@ class Client:
 			f.write(f_data)
 
 	def Send(self):
+		start = 0
+		end = 0
+		time_i = 0
 		while True:
 			while self.flag == 1:
 				pass
+			end = time.time()				#time check end2
+			with open("time_check.txt", 'a') as f:
+				tmp_str = str(time_i) + " : " + str(end - start) + "\n"
+				f.write(tmp_str)
+				time_i += 1
 			modi_info = self.input_queue.get()
+			start = time.time()				#time check start
 			self.tmp_data = modi_info
 			#send_data = core.Modi_list(0,0)
 			#print("tmp data is ", self.tmp_data)
@@ -200,7 +209,7 @@ class Client:
 				#print("Gathering request")
 				self.gathering()
 			elif load_data == "Success":
-				#print("Get Success!!")
+				#time check end1
 				self.flag = 0
 				self.tmp_data = []
 			elif load_data == "Request again":

@@ -30,7 +30,7 @@ def Dec(mode, cipher, key, iv):
 		obj = AES.new(key, AES.MODE_CTR, counter = counter_obj)
 	data = b''
 	in_len = len(cipher)
-	print(in_len)
+	#print(in_len)
 	for i in range(in_len - 1):
 		tmp_cipher = cipher[:16]
 		tmp_data = obj.decrypt(tmp_cipher)

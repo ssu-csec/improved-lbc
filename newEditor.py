@@ -128,7 +128,7 @@ def left(window, buffer, cursor):
 	window.up(cursor)
 	window.horizontal_scroll(cursor)
 
-def main(stdscr, input_queue, flag):
+def main(stdscr, input_queue):
 
 	with open("test.txt") as f:
 		buffer = Buffer(f.read().splitlines())
@@ -197,14 +197,15 @@ def main(stdscr, input_queue, flag):
 			#elif cursor.row < buffer.bottom and cursor.col > len(buffer.lines[cursor.row + 1]):
 			#	index = index + len(buffer.lines[cursor.row]) + len(buffer.lines[cursor.row + 1]) - cursor.col
 		elif k == "KEY_LEFT":
-			cursor.left(buffer)
-			window.up(cursor)
-			window.horizontal_scroll(cursor)
+			#cursor.left(buffer)
+			#window.up(cursor)
+			#window.horizontal_scroll(cursor)
+			left(window, buffer, cursor)
 			index -= 1
 		elif k == "KEY_RIGHT":
-			cursor.right(buffer)
-			window.down(buffer, cursor)
-			window.horizontal_scroll(cursor)
+			#cursor.right(buffer)
+			#window.down(buffer, cursor)
+			#window.horizontal_scroll(cursor)
 			right(window, buffer, cursor)
 			index += 1
 		elif k == "\n":
@@ -235,4 +236,4 @@ def main(stdscr, input_queue, flag):
 
 if __name__ == "__main__":
 	input_queue = Queue()
-	curses.wrapper(main, input_queue, flag)
+	curses.wrapper(main, input_queue)

@@ -22,18 +22,16 @@ elif len(raw_key) < 16:
 key = core.gen_key(raw_key)
 tmp_queue = Queue()
 
-flag = [False]
-
-ip_address = input("Input ip address: ")
 port = int(input("Input port number: "))
+ip_address = input("Input ip address: ")
 
 clientSock = socket(AF_INET, SOCK_STREAM)
 
-client = protocol.Client(clientSock, key, tmp_queue, flag)
+client = protocol.Client(clientSock, key, tmp_queue)
 
 client.main(ip_address, port)
 
 signal.signal(signal.SIGINT, handler)
-curses.wrapper(newEditor.main, tmp_queue, flag)
+curses.wrapper(newEditor.main, tmp_queue)
 
 
