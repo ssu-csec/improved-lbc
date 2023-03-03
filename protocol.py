@@ -9,7 +9,7 @@ import time
 
 class Server:
 	def __init__(self, port, f_name):
-		self.buf = 1024*32
+		self.buf = 1024**3
 		self.send_queue = Queue()
 		self.client_group = []
 		self.data = core.Data()
@@ -108,7 +108,7 @@ class Server:
 
 class Client:
 	def __init__(self, sock, key, input_queue):
-		self.buf = 1024*32
+		self.buf = 1024**3
 		self.sock = sock
 		self.data = core.Data()
 		self.key = key
