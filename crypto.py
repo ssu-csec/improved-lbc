@@ -29,7 +29,7 @@ def Dec(mode, cipher, key, iv):
 		counter_obj = Counter.new(128, initial_value = iv[-1])
 		obj = AES.new(key, AES.MODE_CTR, counter = counter_obj)
 	data = b''
-	in_len = len(cipher)
+	in_len = len(cipher)/16
 	#print(in_len)
 	for i in range(in_len - 1):
 		tmp_cipher = cipher[:16]
