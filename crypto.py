@@ -29,7 +29,7 @@ def Dec(mode, cipher, key, iv):
 		counter_obj = Counter.new(128, initial_value = iv[-1])
 		obj = AES.new(key, AES.MODE_CTR, counter = counter_obj)
 	data = b''
-	in_len = len(cipher)/16
+	in_len = int(len(cipher)/16)
 	#print(in_len)
 	for i in range(in_len - 1):
 		tmp_cipher = cipher[:16]
@@ -54,5 +54,4 @@ if __name__ == "__main__":
 
 	plain = Dec(mode, cipher, key, iv)
 
-	print("plaintext is ", plain)
-	print(plain)
+	print("plaintext is '", plain, "'")

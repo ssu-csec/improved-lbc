@@ -28,24 +28,24 @@ def Dec(mode, cipher, raw_key, iv):
 	#print("the length of ciphertext is ", len(cipher), ", also the type of ciphertext is ", type(cipher))
 	if mode == "CBC":
 		obj = pyaes.AESModeOfOperationCBC(key, iv = iv)
-		plain = b''
+		data = b''
 		in_len = int(len(cipher)/16)
 		print("in_len = ", in_len)
 		for i in range(in_len - 1):
 			tmp_cipher = cipher[:16]
 			tmp_data = obj.decrypt(tmp_cipher)
-			plain += tmp_data
+			data += tmp_data
 			cipher = cipher[16:]
 		tmp_data = obj.decrypt(cipher)
 		num = tmp_data.count(b'\00')
 		tmp_data = tmp_data[:(16 - num)]
-		plain += tmp_data
+		data += tmp_data
 
 	elif mode == "CTR":
 		counter = pyaes.Counter(initial_value = int(iv[-1]))
 		obj = pyaes.AESModeOfOperationCTR(key, counter = counter)
-		plain = obj.decrypt(cipher)
-
+		data = obj.decrypt(cipher)
+	plain = ''.join(chr(b) for b in data)
 	return plain
 #	return str(data.rstrip(b"\x00"))[2:-1]
 
@@ -60,4 +60,3 @@ if __name__ == "__main__":
 	plain = Dec(mode, cipher, key, iv)
 
 	print("plaintext is ", plain)
-	print(plain)
