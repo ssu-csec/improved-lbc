@@ -218,7 +218,6 @@ class Client:
 				self.data.global_meta = load_data[1].global_meta
 				self.data.data = load_data[1].data
 			else:
-				self.outer_flag[0] = True
 				self.file_update("test.txt", load_data)
 				load_data.unpacking(self.data)
 	

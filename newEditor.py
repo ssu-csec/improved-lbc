@@ -216,7 +216,7 @@ def main(stdscr, input_queue):
 			index += 1
 			buffer.split(cursor)
 			right(window, buffer, cursor)
-			right(window, buffer, cursor)
+			#right(window, buffer, cursor)
 		elif k in ("KEY_DELETE", "\x04", "KEY_DC"):
 			buffer.delete(cursor)
 			input_queue.put(["D", index])

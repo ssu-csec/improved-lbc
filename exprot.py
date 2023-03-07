@@ -1,6 +1,7 @@
 from socket import *
 from queue import Queue
-import crypto
+#import crypto
+import modes
 import pickle
 import threading
 import time
@@ -25,7 +26,7 @@ class Server:
 			self.client_group[sender].sendall(pickle.dumps("Success"))
 
 	def Recv(self, conn):
-		conn.sendall(pickle.dumps(self.data))
+		conn.send(pickle.dumps(self.data))
 		while True:
 			recv_data = conn.recv(self.buf)
 			load_data = pickle.loads(recv_data)
@@ -33,7 +34,7 @@ class Server:
 				print("client_byebye")
 				self.client_group.remove(conn)
 				if len(self.client_group) == 0:
-					with open(self.f_name, 'wb') as f:
+					with open(self.f_name, 'w') as f:
 						f.write(self.data)
 						f.close
 					return
@@ -56,7 +57,7 @@ class Server:
 		while True:
 			connectionSock, addr = serverSock.accept()
 			if len(self.client_group) == 0:
-				with open(self.f_name, 'rb') as f:
+				with open(self.f_name, 'r') as f:
 					self.data = f.read()
 			self.client_group.append(connectionSock)
 			print("Connected to new client", str(addr))
@@ -68,7 +69,7 @@ class Client:
 	def __init__(self, sock, input_queue, mode, key, initial_vector):
 		self.sock = sock
 		self.buf = 1024**3
-		self.data = b''
+		self.data = ''
 		self.input_queue = input_queue
 		self.flag = 0
 		self.mode = mode
@@ -76,12 +77,12 @@ class Client:
 		self.iv = initial_vector
 
 	def Modification(self, recv_data):
-		plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
+		plain_data = modes.Dec(self.mode, self.data, self.key, self.iv)
 		if recv_data[0] == "I":
 			plain_data = plain_data[:recv_data[1]] + recv_data[2] + plain_data[recv_data[1]:]
 		elif recv_data[0] == "D":
 			plain_data = plain_data[:recv_data[1]] + plain_data[recv_data[1] + 1:]
-		self.data = crypto.Enc(self.mode, plain_data, self.key, self.iv) 
+		self.data = modes.Enc(self.mode, plain_data, self.key, self.iv) 
 
 	def Send(self):
 		start = 0
@@ -98,7 +99,7 @@ class Client:
 			modi_data = self.input_queue.get()
 			start = time.time()
 			self.Modification(modi_data)
-			plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
+			plain_data = modes.Dec(self.mode, self.data, self.key, self.iv)
 			with open("test.txt", 'w') as f:
 				f.write(plain_data)
 			self.sock.send(pickle.dumps(self.data))
@@ -112,7 +113,7 @@ class Client:
 				self.flag = 0
 			else:
 				self.data = load_data
-				plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
+				plain_data = modes.Dec(self.mode, self.data, self.key, self.iv)
 				with open("test.txt", 'w') as f:
 					f.write(plain_data)
 	
@@ -122,7 +123,8 @@ class Client:
 
 		recv_data = self.sock.recv(self.buf)
 		self.data = pickle.loads(recv_data)
-		plain_text = crypto.Dec(self.mode, self.data, self.key, self.iv)
+		print("Debug : ", type(self.data))
+		plain_text = modes.Dec(self.mode, self.data, self.key, self.iv)
 		with open("test.txt", 'w') as f:
 			f.write(plain_text)
 
