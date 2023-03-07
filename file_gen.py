@@ -9,12 +9,11 @@ str_len = int(input("Choose file length: "))
 
 f_str = ""
 
-for i in range(str_len):
-	if i%50 == 0 and i != 0:
-		f_str += "\n"
-	else:
-		asc = random.randint(32, 127)
-		f_str += chr(asc)
+sample_s = "It is a sample sentence for test with 50 letters.\n"
+
+for i in range(int(str_len/50)):
+	f_str += sample_s
+f_str += sample_s[:str_len%50]
 
 data = core.Data()
 core.insert(f_str, 0, data, key)
