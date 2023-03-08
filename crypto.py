@@ -1,48 +1,24 @@
-from Crypto.Cipher import AES
-from Crypto.Util import Counter
+import cbc_ctr
 
 def Enc(mode, data, key, iv):
 	if mode == "CBC":
-		obj = AES.new(key, AES.MODE_CBC, iv)
+		obj = cbc_ctr.CBC_Crypto(key, iv)
 	elif mode == "CTR":
-		counter_obj = Counter.new(128, initial_value = iv[-1])
-		obj = AES.new(key, AES.MODE_CTR, counter = counter_obj)
-	cipher = b''
-	in_len = len(data)
-	while in_len > 16:
-		tmp_data = data[:16]
-		tmp_cipher = obj.encrypt(tmp_data)
-		cipher += tmp_cipher
-		in_len -= 16
-		data = data[16:]
+		obj = cbc_ctr.CTR_Crypto(key, iv)
 	
-	for i in range(16 - len(data)):
-		data += "\0"
-	tmp_cipher = obj.encrypt(data)
-	cipher += tmp_cipher
+	cipher = obj.encrypt(data)
+
 	return cipher
 
 def Dec(mode, cipher, key, iv):
 	if mode == "CBC":
-		obj = AES.new(key, AES.MODE_CBC, iv)
+		obj = cbc_ctr.CBC_Crypto(key, iv)
 	elif mode == "CTR":
-		counter_obj = Counter.new(128, initial_value = iv[-1])
-		obj = AES.new(key, AES.MODE_CTR, counter = counter_obj)
-	data = b''
-	in_len = int(len(cipher)/16)
-	#print(in_len)
-	for i in range(in_len - 1):
-		tmp_cipher = cipher[:16]
-		tmp_data = obj.decrypt(tmp_cipher)
-		data += tmp_data
-		cipher = cipher[16:]
-	tmp_data = obj.decrypt(cipher)
-	#num = tmp_data.count(b'\x00')
-	#print("num : ", num)
-	#tmp_data = tmp_data[:(16 - num)]
-	data += tmp_data
+		obj = cbc_ctr.CTR_Crypto(key, iv)
+	
+	plain = obj.decrypt(cipher)
 
-	return str(data.rstrip(b"\x00"))[2:-1]
+	return plain
 
 if __name__ == "__main__":
 	key = 'This is a key123'

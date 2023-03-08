@@ -1,7 +1,6 @@
 from socket import *
 from queue import Queue
-#import crypto
-import modes
+import crypto
 import pickle
 import threading
 import time
@@ -77,12 +76,12 @@ class Client:
 		self.iv = initial_vector
 
 	def Modification(self, recv_data):
-		plain_data = modes.Dec(self.mode, self.data, self.key, self.iv)
+		plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 		if recv_data[0] == "I":
 			plain_data = plain_data[:recv_data[1]] + recv_data[2] + plain_data[recv_data[1]:]
 		elif recv_data[0] == "D":
 			plain_data = plain_data[:recv_data[1]] + plain_data[recv_data[1] + 1:]
-		self.data = modes.Enc(self.mode, plain_data, self.key, self.iv) 
+		self.data = crypto.Enc(self.mode, plain_data, self.key, self.iv) 
 
 	def Send(self):
 		start = 0
@@ -99,7 +98,7 @@ class Client:
 			modi_data = self.input_queue.get()
 			start = time.time()
 			self.Modification(modi_data)
-			plain_data = modes.Dec(self.mode, self.data, self.key, self.iv)
+			plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 			with open("test.txt", 'w') as f:
 				f.write(plain_data)
 			self.sock.send(pickle.dumps(self.data))
@@ -113,7 +112,7 @@ class Client:
 				self.flag = 0
 			else:
 				self.data = load_data
-				plain_data = modes.Dec(self.mode, self.data, self.key, self.iv)
+				plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 				with open("test.txt", 'w') as f:
 					f.write(plain_data)
 	
@@ -124,7 +123,7 @@ class Client:
 		recv_data = self.sock.recv(self.buf)
 		self.data = pickle.loads(recv_data)
 		print("Debug : ", type(self.data))
-		plain_text = modes.Dec(self.mode, self.data, self.key, self.iv)
+		plain_text = crypto.Dec(self.mode, self.data, self.key, self.iv)
 		with open("test.txt", 'w') as f:
 			f.write(plain_text)
 
