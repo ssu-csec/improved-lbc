@@ -9,11 +9,11 @@ str_len = int(input("Choose file length: "))
 
 f_str = ""
 
-sample_s = "It is a sample sentence for test with 50 letters.\n"
+sample_s = "This is an example sentence for our experiments with seventy letters.\n"
 
-for i in range(int(str_len/50)):
+for i in range(int(str_len/70)):
 	f_str += sample_s
-f_str += sample_s[:str_len%50]
+f_str += sample_s[:str_len%70]
 
 data = core.Data()
 core.insert(f_str, 0, data, key)
