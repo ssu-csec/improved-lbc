@@ -9,7 +9,7 @@ class Server:
 	def __init__(self, port, f_name):
 		self.buf = 1024**3
 		self.port = port
-		self.data = b''
+		self.data = ''
 		self.client_group = []
 		self.send_queue = Queue()
 		self.f_name = f_name
@@ -83,7 +83,7 @@ class Client:
 			plain_data = plain_data[:recv_data[1]] + plain_data[recv_data[1] + 1:]
 		self.data = crypto.Enc(self.mode, plain_data, self.key, self.iv) 
 
-	def Send(self):
+	def Send(self, str_len):
 		start = 0
 		end = 0
 		time_i = 0
@@ -91,7 +91,7 @@ class Client:
 			while self.flag == 1:
 				pass
 			end = time.time()
-			with open("extime_check.txt", 'a') as f:
+			with open("extime_check_" + self.mode + "_" + str(str_len) + ".txt", 'a') as f:
 				tmp_str = str(time_i) + " : " + str(end - start) + "\n"
 				f.write(tmp_str)
 				time_i += 1
@@ -100,7 +100,8 @@ class Client:
 			self.Modification(modi_data)
 			plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 			with open("test.txt", 'w') as f:
-				f.write(plain_data)
+				f.write(plain_data.replace("\0", ""))
+				#f.write(plain_data)
 			self.sock.send(pickle.dumps(self.data))
 			self.flag = 1
 
@@ -114,7 +115,8 @@ class Client:
 				self.data = load_data
 				plain_data = crypto.Dec(self.mode, self.data, self.key, self.iv)
 				with open("test.txt", 'w') as f:
-					f.write(plain_data)
+					f.write(plain_data.replace("\0", ""))
+					#f.write(plain_data)
 	
 	def main(self, ip_address, port):
 
@@ -122,12 +124,14 @@ class Client:
 
 		recv_data = self.sock.recv(self.buf)
 		self.data = pickle.loads(recv_data)
-		print("Debug : ", type(self.data))
+		print("Check point 1 with cipher data ", len(self.data))
 		plain_text = crypto.Dec(self.mode, self.data, self.key, self.iv)
+		str_len = len(plain_text)
 		with open("test.txt", 'w') as f:
-			f.write(plain_text)
+			f.write(plain_text.replace("\0", ""))
+			#f.write(plain_text)
 
-		send_thread = threading.Thread(target = self.Send)
+		send_thread = threading.Thread(target = self.Send, args = (str_len, ))
 		send_thread.start()
 
 		recv_thread = threading.Thread(target = self.Recv)

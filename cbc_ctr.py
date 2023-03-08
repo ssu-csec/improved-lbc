@@ -38,6 +38,7 @@ class CBC_Crypto:
 		str_len = len(plaintext)
 		for i in range(int(str_len/16)):
 			tmp_str = plaintext[:16]
+			#print(i, "th plain is ", tmp_str)
 			plaintext = plaintext[16:]
 			self.prev_block = self.enc_one(tmp_str)
 			ciphertext += ''.join(self.prev_block)
@@ -54,7 +55,10 @@ class CBC_Crypto:
 		for i in range(int(str_len/16) - 1):
 			tmp_str = ciphertext[:16]
 			ciphertext = ciphertext[16:]
-			plaintext += ''.join(self.dec_one(tmp_str))
+			tmp_plain =  ''.join(self.dec_one(tmp_str))
+			#with open ("testfile.txt", "a") as f:
+			#	f.write(str(i) + "th plaintext is " + str(tmp_plain) + "\n")
+			plaintext += tmp_plain
 			self.prev_block = tmp_str
 		last_block = ''.join(self.dec_one(ciphertext))
 		plaintext += last_block.rstrip("\0")
