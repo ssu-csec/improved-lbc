@@ -16,6 +16,7 @@ class Server:
 		self.count = 0
 		self.port = port
 		self.f_name = f_name
+		self.gathering_cnt = 20
 
 	def Conflict_Handling(self, conflict_list):
 		print("Conflict Handling!")
@@ -46,11 +47,12 @@ class Server:
 			recv = self.send_queue.get()
 			if recv == 'Gathering':
 				print("send gathering request")
-				self.client_group[random.randint(0, len(self.client_group) - 1)].send(pickle.dumps('Gathering'))
-			elif type(recv[1]) == type([]):
+				chosen = random.randint(0, len(self.client_group) -1)
 				for i in range(len(self.client_group)):
-					if recv[0] != self.client_group[i]:
-						self.client_group[i].send(pickle.dumps(recv[1]))
+					if i == chosen:
+						self.client_group[i].send(pickle.dumps('Gathering'))
+					else:
+						self.client_group[i].send(pickle.dumps('Gathering self'))
 			else:
 				for i in range(len(self.client_group)):
 					if recv[0] != self.client_group[i]:
@@ -60,7 +62,17 @@ class Server:
 				self.client_group[sender].sendall(pickle.dumps("Success"))
 	
 	def Recv(self, conn): 
-		conn.sendall(pickle.dumps(self.data))
+		conn.send(pickle.dumps(self.data.global_meta))
+		send_len = len(self.data.data)
+		send_data = self.data.data
+		while send_len > 0:
+			print("Send_len is ", send_len)
+			conn.sendall(pickle.dumps(send_data[:400]))
+			send_len -= 400
+			send_data = send_data[400:]
+			time.sleep(0.01)
+		conn.sendall(pickle.dumps('END'))
+		print("Send END")
 		while True:
 			recv_data = conn.recv(self.buf)
 			modi_info = pickle.loads(recv_data)
@@ -72,18 +84,38 @@ class Server:
 						pickle.dump(self.data, f)
 					return
 			elif type(modi_info) == type([]) and modi_info[0] == 'G':
-				self.send_queue.put([conn, modi_info])
-				self.data.global_meta = modi_info[1].global_meta
-				self.data.data = modi_info[1].data
-				self.count -= 10
-			else:
+				self.data.global_meta = modi_info[1]
+				self.data.data = []
+				recv_data = conn.recv(self.buf)
+				load_data = pickle.loads(recv_data)
+				while load_data != "END":
+					print("DEBUG:", type(load_data))
+					self.data.data += load_data[1]
+					recv_data = conn.recv(self.buf)
+					load_data = pickle.loads(recv_data)
+				self.count -= self.gathering.cnt
+			elif str(type(modi_info)) == "<class 'core.Modi_list'>":
 				self.send_queue.put([conn, recv_data])
 				self.count += 1
 				modi_info.unpacking(self.data)
 				#print("Now Data is ", self.data.data)
 				print("get ", self.count, "th data")
-		
-			if self.count >= 10:
+				'''
+			elif type(modi_info) == type([]) and modi_info[0] == 'G':
+				if modi_info[2] == 'G':
+					self.data.global_meta = modi_info[1]
+					self.data.data = []
+				elif modi_info[2] == 0:
+					print("GET ", modi_info[2], "data. FINISH!!")
+					self.data.data += modi_info[1]
+					self.count -= 20
+				elif modi_info == "END":
+					print("FINISH GATHERING")
+				else:
+					print("GET ", modi_info[2], "data. waiting")
+					self.data.data += modi_info[1]
+				'''
+			if self.count >= self.gathering.cnt:
 				self.send_queue.put('Gathering')
 	def main(self):
 		serverSock = socket(AF_INET, SOCK_STREAM)
@@ -122,7 +154,19 @@ class Client:
 		self.data.global_meta = core.global_enc(global_str, self.key)
 		iv = random.randint(0,255)
 		self.data.data = core.encrypt(plain, self.key, iv, iv)
-		self.sock.sendall(pickle.dumps(['G', self.data]))
+		self.sock.send(pickle.dumps(['G', self.data.global_meta]))
+		send_data = self.data.data
+		send_len = len(send_data)
+		cnt = int(send_len/400) + 1
+		while send_len > 0:
+			#print("DEBUG : ", send_len)
+			self.sock.send(pickle.dumps(['G', send_data[:400], cnt]))
+			send_len -= 400
+			cnt -= 1
+			send_data = send_data[400:]
+			time.sleep(0.1)
+		self.sock.send(pickle.dumps('END'))
+		#print("DEBUG: send END")
 	
 	def Conflict_Handling(self, request):
 		recv_data = self.sock.recv(self.buf)
@@ -167,7 +211,7 @@ class Client:
 		with open("test.txt", 'w') as f:
 			f.write(f_data)
 
-	def Send(self):
+	def Send(self, str_len):
 		start = 0
 		end = 0
 		time_i = 0
@@ -175,7 +219,7 @@ class Client:
 			while self.flag == 1:
 				pass
 			end = time.time()				#time check end2
-			with open("time_check.txt", 'a') as f:
+			with open("time_check_" + str(str_len) + ".txt", 'a') as f:
 				tmp_str = str(time_i) + " : " + str(end - start) + "\n"
 				f.write(tmp_str)
 				time_i += 1
@@ -208,31 +252,50 @@ class Client:
 			if load_data == "Gathering":
 				#print("Gathering request")
 				self.gathering()
+			elif load_data == "Gathring self":
+				plain = core.decrypt(self.data, self.key)
+				global_str = core.gen_global(len(plain))
+				self.data.global_meta = core.global_enc(global_str, self.key)
+				iv = random.randint(0,255)
+				self.data.data = core.encrypt(plain, self.key, iv, iv)
 			elif load_data == "Success":
 				#time check end1
 				self.flag = 0
 				self.tmp_data = []
 			elif load_data == "Request again":
 				self.Conflict_Handling(self, self.tmp_data)
-			elif type(load_data) == type([]) and load_data[0] == "G":
-				self.data.global_meta = load_data[1].global_meta
-				self.data.data = load_data[1].data
+				'''elif type(load_data) == type([]) and load_data[0] == "G":
+					self.data.global_meta = load_data[1]
+					recv_data = self.sock.recv(self.buf)
+					load_data = pickle.loads(recv_data)
+					self.data.data = load_data[1]
+					recv_data = self.sock.recv(self.buf)
+					load_data = pickle.loads(recv_data)
+					self.data.data += load_data[1]
+				'''
 			else:
 				self.file_update("test.txt", load_data)
 				load_data.unpacking(self.data)
 	
 	def main(self, ip_address, port):
+		#import pdb;pdb.set_trace()
 		
 		self.sock.connect((ip_address, port))
 
 		recv_data = self.sock.recv(self.buf)
+		self.data.global_meta = pickle.loads(recv_data)
+		recv_data = self.sock.recv(self.buf)
 		load_data = pickle.loads(recv_data)
-		self.data = load_data
+		while load_data != "END":
+			self.data.data += load_data
+			recv_data = self.sock.recv(self.buf)
+			load_data = pickle.loads(recv_data)
 		plain_text = core.decrypt(self.data, self.key)
+		str_len = len(plain_text)
 		with open("test.txt", 'w') as f:
 			f.write(''.join(plain_text))
 
-		send_thread = threading.Thread(target = self.Send)
+		send_thread = threading.Thread(target = self.Send, args = (str_len, ))
 		send_thread.start()
 
 		recv_thread = threading.Thread(target = self.Recv)
