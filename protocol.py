@@ -36,8 +36,19 @@ class Server:
 			self.client_group[sender].sendall(pickle.dumps("Success"))
 		else:
 			for data in conflict_list:
-				self.send_queue.put(data)
+				self.send_queue.put(data)i
+	def Send_Gathering(conn):
+		conn.send(pickle.dumps(self.data.global_meta))
+		send_len = len(self.data.data)
+		send_data = self.data.data
+		while send_len > 0:
+			conn.sendall(pickle.dumps(send_data[:400]))
+			send_len -= 400
+			send_data = send_data[400:]
+			time.sleep(0.01)
+			conn.sendall(pickle.dumps('END'))
 	def Send(self):
+		chosen = 0
 		while True:
 			if self.send_queue.qsize() > 1:
 				conflict_list = []
@@ -47,12 +58,12 @@ class Server:
 			recv = self.send_queue.get()
 			if recv == 'Gathering':
 				print("send gathering request")
-				chosen = random.randint(0, len(self.client_group) -1)
+				chosen = random.randint(0, len(self.client_group) - 1)
+				self.client_group[chosen].send(pickle.dumps('Gathering'))
+			elif: recv = 'Gathering Finish':
 				for i in range(len(self.client_group)):
-					if i == chosen:
-						self.client_group[i].send(pickle.dumps('Gathering'))
-					else:
-						self.client_group[i].send(pickle.dumps('Gathering self'))
+					if i != chosen:
+						self.Send_Gathering(self.client_group[i])
 			else:
 				for i in range(len(self.client_group)):
 					if recv[0] != self.client_group[i]:
@@ -94,27 +105,13 @@ class Server:
 					recv_data = conn.recv(self.buf)
 					load_data = pickle.loads(recv_data)
 				self.count -= self.gathering.cnt
+				self.send_queue.put("Gathering Finish")
 			elif str(type(modi_info)) == "<class 'core.Modi_list'>":
 				self.send_queue.put([conn, recv_data])
 				self.count += 1
 				modi_info.unpacking(self.data)
 				#print("Now Data is ", self.data.data)
 				print("get ", self.count, "th data")
-				'''
-			elif type(modi_info) == type([]) and modi_info[0] == 'G':
-				if modi_info[2] == 'G':
-					self.data.global_meta = modi_info[1]
-					self.data.data = []
-				elif modi_info[2] == 0:
-					print("GET ", modi_info[2], "data. FINISH!!")
-					self.data.data += modi_info[1]
-					self.count -= 20
-				elif modi_info == "END":
-					print("FINISH GATHERING")
-				else:
-					print("GET ", modi_info[2], "data. waiting")
-					self.data.data += modi_info[1]
-				'''
 			if self.count >= self.gathering.cnt:
 				self.send_queue.put('Gathering')
 	def main(self):
@@ -164,7 +161,7 @@ class Client:
 			send_len -= 400
 			cnt -= 1
 			send_data = send_data[400:]
-			time.sleep(0.1)
+			time.sleep(0.01)
 		self.sock.send(pickle.dumps('END'))
 		#print("DEBUG: send END")
 	
@@ -250,29 +247,22 @@ class Client:
 			recv_data = self.sock.recv(self.buf)
 			load_data = pickle.loads(recv_data)
 			if load_data == "Gathering":
-				#print("Gathering request")
 				self.gathering()
-			elif load_data == "Gathring self":
-				plain = core.decrypt(self.data, self.key)
-				global_str = core.gen_global(len(plain))
-				self.data.global_meta = core.global_enc(global_str, self.key)
-				iv = random.randint(0,255)
-				self.data.data = core.encrypt(plain, self.key, iv, iv)
 			elif load_data == "Success":
 				#time check end1
 				self.flag = 0
 				self.tmp_data = []
 			elif load_data == "Request again":
 				self.Conflict_Handling(self, self.tmp_data)
-				'''elif type(load_data) == type([]) and load_data[0] == "G":
-					self.data.global_meta = load_data[1]
+			elif type(load_data) == type([]) and load_data[0] == "G":
+				self.data.global_meta = load_data[1]
+				self.data.data = []
+				recv_data = self.sock.recv(self.buf)
+				load_data = pickle.loads(recv_data)
+				while load_data != "END":
+					self.data += load_data[1]
 					recv_data = self.sock.recv(self.buf)
-					load_data = pickle.loads(recv_data)
-					self.data.data = load_data[1]
-					recv_data = self.sock.recv(self.buf)
-					load_data = pickle.loads(recv_data)
-					self.data.data += load_data[1]
-				'''
+					load_data - pickle.loads(recv_data)
 			else:
 				self.file_update("test.txt", load_data)
 				load_data.unpacking(self.data)
