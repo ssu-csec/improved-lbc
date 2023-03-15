@@ -82,10 +82,10 @@ class Client:
 	def Modification(self, recv_data):
 		if recv_data[0] == 'I':
 			self.data = self.data[:recv_data[1]] + recv_data[2] + self.data[recv_data[1]:]
-		elif recv_data[1] == "D":
+		elif recv_data[0] == "D":
 			self.data = self.data[:recv_data[1]] + self.data[recv_data[1] + 1:]
 
-	def Send(self):
+	def Send(self, str_len):
 		start = 0
 		end = 0
 		time_i = 0
@@ -93,7 +93,7 @@ class Client:
 			while self.flag == 1:
 				pass
 			end = time.time()
-			with open("nonetime_check.txt", 'a') as f:
+			with open("nonetime_check_" + str(str_len) + ".txt", 'a') as f:
 				tmp_str = str(time_i) + " : " + str(end - start) + "\n"
 				f.write(tmp_str)
 				time_i += 1
@@ -122,10 +122,11 @@ class Client:
 		recv_data = self.sock.recv(self.buf)
 		load_data = pickle.loads(recv_data)
 		self.data = load_data
+		str_len = len(self.data)
 		with open("test.txt", "w") as f:
 			f.write(''.join(self.data))
 
-		send_thread = threading.Thread(target = self.Send)
+		send_thread = threading.Thread(target = self.Send, args = (str_len, ))
 		send_thread.start()
 
 		recv_thread = threading.Thread(target = self.Recv)

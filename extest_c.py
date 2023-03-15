@@ -19,7 +19,7 @@ elif len(raw_key) < 16:
 		raw_key += '0'
 
 mode = input("Please choose mode. CTR or CBC? ")					
-iv = 'Initial Vector 1'											
+iv = 'Initial Vector 2'											
 tmp_queue = Queue()
 
 clientSock = socket(AF_INET, SOCK_STREAM)

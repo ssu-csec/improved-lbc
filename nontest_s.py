@@ -1,5 +1,3 @@
-import core
-import protocol
 import noneprot
 
 port = int(input("Input port number: "))
