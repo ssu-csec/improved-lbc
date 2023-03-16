@@ -160,6 +160,10 @@ def main(stdscr, input_queue):
 				line = "<<" + line[window.col + 1:]
 			if len(line) > window.n_cols:
 				line = line[:window.n_cols - 1] + ">>"
+			with open("DEBUG.txt", "a") as f:
+				f.write("=======\n")
+				f.write(line)
+				f.write("\n======\n\n")
 			stdscr.addstr(row, 0, line)
 		stdscr.move(*window.translate(cursor))
 

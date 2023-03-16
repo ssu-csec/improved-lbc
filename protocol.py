@@ -36,16 +36,16 @@ class Server:
 			self.client_group[sender].sendall(pickle.dumps("Success"))
 		else:
 			for data in conflict_list:
-				self.send_queue.put(data)i
-	def Send_Gathering(conn):
-		conn.send(pickle.dumps(self.data.global_meta))
+				self.send_queue.put(data)
+	def Send_Gathering(self, conn):
+		conn.send(pickle.dumps(["G", self.data.global_meta]))
 		send_len = len(self.data.data)
 		send_data = self.data.data
 		while send_len > 0:
 			conn.sendall(pickle.dumps(send_data[:400]))
 			send_len -= 400
 			send_data = send_data[400:]
-			time.sleep(0.01)
+			time.sleep(0.1)
 			conn.sendall(pickle.dumps('END'))
 	def Send(self):
 		chosen = 0
@@ -60,7 +60,7 @@ class Server:
 				print("send gathering request")
 				chosen = random.randint(0, len(self.client_group) - 1)
 				self.client_group[chosen].send(pickle.dumps('Gathering'))
-			elif: recv = 'Gathering Finish':
+			elif recv == 'Gathering Finish':
 				for i in range(len(self.client_group)):
 					if i != chosen:
 						self.Send_Gathering(self.client_group[i])
@@ -81,7 +81,7 @@ class Server:
 			conn.sendall(pickle.dumps(send_data[:400]))
 			send_len -= 400
 			send_data = send_data[400:]
-			time.sleep(0.01)
+			time.sleep(0.1)
 		conn.sendall(pickle.dumps('END'))
 		print("Send END")
 		while True:
@@ -104,15 +104,14 @@ class Server:
 					self.data.data += load_data[1]
 					recv_data = conn.recv(self.buf)
 					load_data = pickle.loads(recv_data)
-				self.count -= self.gathering.cnt
+				self.count -= self.gathering_cnt
 				self.send_queue.put("Gathering Finish")
 			elif str(type(modi_info)) == "<class 'core.Modi_list'>":
 				self.send_queue.put([conn, recv_data])
 				self.count += 1
 				modi_info.unpacking(self.data)
-				#print("Now Data is ", self.data.data)
 				print("get ", self.count, "th data")
-			if self.count >= self.gathering.cnt:
+			if self.count >= self.gathering_cnt:
 				self.send_queue.put('Gathering')
 	def main(self):
 		serverSock = socket(AF_INET, SOCK_STREAM)
@@ -161,7 +160,7 @@ class Client:
 			send_len -= 400
 			cnt -= 1
 			send_data = send_data[400:]
-			time.sleep(0.01)
+			time.sleep(0.1)
 		self.sock.send(pickle.dumps('END'))
 		#print("DEBUG: send END")
 	
@@ -254,15 +253,15 @@ class Client:
 				self.tmp_data = []
 			elif load_data == "Request again":
 				self.Conflict_Handling(self, self.tmp_data)
-			elif type(load_data) == type([]) and load_data[0] == "G":
+			elif type(load_data) == type([]) and load_data[0] == "G":				
 				self.data.global_meta = load_data[1]
 				self.data.data = []
 				recv_data = self.sock.recv(self.buf)
 				load_data = pickle.loads(recv_data)
 				while load_data != "END":
-					self.data += load_data[1]
+					self.data.data += load_data
 					recv_data = self.sock.recv(self.buf)
-					load_data - pickle.loads(recv_data)
+					load_data = pickle.loads(recv_data)
 			else:
 				self.file_update("test.txt", load_data)
 				load_data.unpacking(self.data)
