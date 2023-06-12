@@ -1,6 +1,6 @@
 import random
-import aes
 import copy
+import aes
 
 one_block_len = 14
 
@@ -24,6 +24,7 @@ class Modi_list:
 		data.data = data.data[:ins_index] + self.ins_list + data.data[ins_index:]
 	def __str__(self):
 		return str((self.modi_index, self.modi_length, self.glob_list, self.del_list, self.ins_list))
+
 def gen_key(raw_key):
 	ascii_key = aes.str2hex(raw_key)
 	key_matrix = aes.block2matrix(ascii_key)
@@ -98,7 +99,7 @@ def global_dec(input_list, dec_key):
 		i += 1
 	return output_str
 
-def encrypt(input_str, enc_key, f_iv, b_iv):		# input_str: string / enc_key : round key list / f_iv, b_link : int type /
+def encrypt(input_str, enc_key, f_iv, b_iv):
 	output_list = []
 	input_hex = []
 	left_len = len(input_str)
@@ -209,56 +210,108 @@ def delete(del_len, index, input_data, key):		# delete length is 1
 	output_list = Modi_list(index, -(del_len))
 	global_str = global_dec(input_data.global_meta, key)
 	index -= 1
-	block_index = search_block_index(global_str, index)
-	in_index = index
-	if block_index == len(global_str):
-		block_index -= 1
-		in_index = global_str[block_index]
-	else:
-		for i in range(block_index):
-			in_index -= global_str[i]
+	f_block_index = search_block_index(global_str, index)
+	f_in_index = index
 	
-	if global_str[block_index] == 1:	 # remove one block
-		if block_index == 0:				# remove first block
-			tmp_block = aes.AES_128_Decryption(input_data.data[block_index], key)
-			f_link = tmp_block[0][0]
-			tmp_block = aes.AES_128_Decryption(input_data.data[block_index + 1], key)
-			tmp_block[0][0] = f_link
-			tmp_block = aes.AES_128_Encryption(tmp_block, key)
-			output_list.del_list.append(block_index + 1)					# for networking
-			output_list.del_list.append(block_index)						# for networking
-			del input_data.data[block_index]
-			output_list.ins_list.append(block_index)						# for networking
-			output_list.ins_list.append(tmp_block)							# for networking
-			input_data.data[block_index] = tmp_block
+	for i in range(f_block_index):
+		f_in_index -= global_str[i]
+	
+	b_block_index = search_block_index(global_str, index + del_len)
+	b_in_index = index + del_len
+
+	for i in range(b_block_index):
+		b_in_index -= global_str[i]
+	
+	if f_in_index == 0 and b_in_index == 0:	 # remove blocks
+		if f_block_index == 0:				# remove first block
+			if b_block_index == len(global_str):
+				global_str = []
+				del_list = []
+				for i in range(len(global_str) - 1, -1, -1):
+					del_list.append(i)
+				input_data.data = []
+				output_list.del_list.extend(del_list)
+			else:
+				tmp_block = aes.AES_128_Decryption(input_data.data[f_block_index], key)
+				f_link = tmp_block[0][0]
+				tmp_block = aes.AES_128_Decryption(input_data.data[b_block_index], key)
+				tmp_block[0][0] = f_link
+				for i in range(b_block_index, f_block_index - 1, -1):
+					del input_data.data[i]
+					output_list.del_list.append(i)								# for networking
+				tmp_block = aes.AES_128_Encryption(tmp_block, key)
+				input_data.data.insert(f_block_index,tmp_block)					# local data modification
+				output_list.ins_list.append(tmp_block)							# for networking
 
 		else:
-			tmp_block = aes.AES_128_Decryption(input_data.data[block_index], key)
+			tmp_block = aes.AES_128_Decryption(input_data.data[b_block_index - 1], key)
 			b_link = tmp_block[3][3]
-			tmp_block = aes.AES_128_Decryption(input_data.data[block_index - 1], key)
+			tmp_block = aes.AES_128_Decryption(input_data.data[f_block_index - 1], key)
 			tmp_block[3][3] = b_link
+			for i in range(b_block_index - 1, f_block_index - 2, -1):
+				del input_data.data[i]
+				output_list.del_list.append(i)								# for networking
 			tmp_block = aes.AES_128_Encryption(tmp_block, key)
-			output_list.del_list.append(block_index)						# for networking
-			output_list.del_list.append(block_index - 1)					# for networking
-			del input_data.data[block_index - 1]
-			output_list.ins_list.append(block_index - 1)					# for networking
-			output_list.ins_list.append(tmp_block)							# for networking
-			input_data.data[block_index - 1] = tmp_block
-		del global_str[block_index]
-	else:							# remove one letter in the block
-		tmp_block = aes.AES_128_Decryption(input_data.data[block_index], key)
+			input_data.data.insert(f_block_index - 1, tmp_block)			# local data modification
+			output_list.ins_list.append(tmp_block)
+		global_str = global_str[:f_block_index] + global_str[b_block_index:]
+		print("Case 1")
+
+	elif f_in_index == 0 and b_in_index != 0:
+		tmp_block = aes.AES_128_Decryption(input_data.data[f_block_index], key)
+		f_link = tmp_block[0][0]
+		tmp_block = aes.AES_128_Decryption(input_data.data[b_block_index], key)
+		b_link = tmp_block[3][3]
 		tmp_str = aes.matrix2block(tmp_block)
-		del tmp_str[in_index + 1]
-		tmp_str.insert(14, 0)
-		tmp_block = aes.block2matrix(tmp_str)
-		tmp_block = aes.AES_128_Encryption(tmp_block, key)
-		output_list.del_list.append(block_index)							# for networking
-		output_list.ins_list.append(block_index)							# for networking
-		output_list.ins_list.append(tmp_block)								# for networking
-		input_data.data[block_index] = tmp_block
-		global_str[block_index] -= 1
-	input_data.global_meta = global_enc(global_str, key)
-	output_list.glob_list = input_data.global_meta
+		tmp_str = tmp_str[1:b_in_index + 1]
+		tmp_enc = encrypt(aes.hex2str(tmp_str), key, f_link, b_link)
+		for i in range(b_block_index, f_block_index - 1, -1):
+			del input_data.data[i]                                          # local data modification
+			output_list.del_list.append(i)                                  # for networking
+		input_data.data = input_data.data[:f_block_index] + tmp_enc + input_data.data[f_block_index:]
+		output_list.ins_list.extend(tmp_enc)
+		global_str = global_str[:f_block_index] + gen_global(len(tmp_str)) + global_str[b_block_index+1:]
+		print("Case 2")
+
+	elif f_in_index != 0 and b_in_index == 0:
+		tmp_block = aes.AES_128_Decryption(input_data.data[f_block_index], key)
+		f_link = tmp_block[0][0]
+		tmp_str = aes.matrix2block(tmp_block)
+		tmp_block = aes.AES_128_Decryption(input_data.data[b_block_index - 1], key)
+		b_link = tmp_block[3][3]
+		tmp_str = tmp_str[1:f_in_index + 1]
+		tmp_enc = encrypt(aes.hex2str(tmp_str), key, f_link, b_link)
+		for i in range(b_block_index - 1, f_block_index - 1, -1):
+			del input_data.data[i]                                          # local data modification
+			output_list.del_list.append(i)                                  # for networking
+		input_data.data = input_data.data[:f_block_index] + tmp_enc + input_data.data[f_block_index:]
+		output_list.ins_list.extend(tmp_enc)
+		global_str = global_str[:f_block_index] + gen_global(len(tmp_str)) + global_str[b_block_index:]
+		print("Case 3")
+	else:
+		tmp_block = aes.AES_128_Decryption(input_data.data[f_block_index], key)
+		tmp_str = aes.matrix2block(tmp_block)
+		
+		f_link = tmp_str[0]
+		f_tmp_str = tmp_str[1:f_in_index + 1]
+		tmp_block = aes.AES_128_Decryption(input_data.data[b_block_index], key)
+		tmp_str = aes.matrix2block(tmp_block)
+		b_link = tmp_str[15]
+		b_tmp_str = tmp_str[b_in_index + 1:15]
+		
+		tmp_str = f_tmp_str + b_tmp_str
+		tmp_enc = encrypt(aes.hex2str(tmp_str), key, f_link, b_link)
+		
+		for i in range(b_block_index, f_block_index - 1, -1):
+			del input_data.data[i]											# local data modification
+			output_list.del_list.append(i)                                  # for networking
+		input_data.data = input_data.data[:f_block_index] + tmp_enc + input_data.data[f_block_index:]
+		output_list.ins_list.extend(tmp_enc)								# for networking
+		global_str = global_str[:f_block_index] + gen_global(len(tmp_str)) + global_str[b_block_index + 1:]
+		print("Case 4")
+
+	input_data.global_meta = global_enc(global_str, key)					# local global modification
+	output_list.glob_list = input_data.global_meta							# for networking
 
 	return output_list 
 

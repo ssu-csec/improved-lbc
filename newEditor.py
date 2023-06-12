@@ -223,13 +223,13 @@ def main(stdscr, input_queue):
 			#right(window, buffer, cursor)
 		elif k in ("KEY_DELETE", "\x04", "KEY_DC"):
 			buffer.delete(cursor)
-			input_queue.put(["D", index])
+			input_queue.put(["D", index, 1])
 		elif k in ("KEY_BACKSPACE", "\x7f"):
 			if (cursor.row, cursor.col) > (0, 0):
 				left(window, buffer, cursor)
 				index -= 1
 				buffer.delete(cursor)
-			input_queue.put(["D", index])
+			input_queue.put(["D", index, 1])
 			#index -= 1
 		else:
 			buffer.insert(cursor, k)

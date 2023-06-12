@@ -1,5 +1,5 @@
-import core
-import protocol
+import crypto.core
+import crypto.protocol
 
 port = int(input("Input port number: "))
 size = input("Choose size of the data: ")

@@ -30,7 +30,7 @@ class Server:
 			conflict_list[1][0].send(pickle.dumps("Request again"))
 			for i in range(len(self.client_group)):
 				if conflict_list[0][0] != self.client_group[i]:
-					self.client_group[i].send(pickle.dumps(conflic_list[0][1]))
+					self.client_group[i].send(pickle.dumps(conflict_list[0][1]))
 				else:
 					sender = i
 			self.client_group[sender].sendall(pickle.dumps("Success"))
@@ -228,7 +228,7 @@ class Client:
 			if modi_info[0] == "I":
 				send_data = core.insert(modi_info[2], modi_info[1], self.data, self.key)
 			elif modi_info[0] == "D":
-				send_data = core.delete(1, modi_info[1], self.data, self.key)
+				send_data = core.delete(modi_info[2], modi_info[1], self.data, self.key)
 				#Debug
 			'''
 			plainDebug = core.decrypt(self.data, self.key)
